@@ -299,7 +299,7 @@ private struct QueueRow: View {
 
     @ViewBuilder
     private var waveformIndicator: some View {
-        if #available(iOS 17.0, macCatalyst 17.0, *) {
+        if #available(iOS 17.0, macOS 14.0, macCatalyst 17.0, *) {
             Image(systemName: "waveform")
                 .symbolEffect(.variableColor.iterative, options: .repeating)
         } else {
