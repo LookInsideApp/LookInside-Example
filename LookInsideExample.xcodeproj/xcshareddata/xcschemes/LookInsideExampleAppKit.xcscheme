@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "B0B5DBD01FD27CDD46F8F0F5"
-               BuildableName = "LookInsideExample.app"
-               BlueprintName = "LookInsideExample"
+               BlueprintIdentifier = "92D45C3E0560401473964B2F"
+               BuildableName = "LookInsideExampleAppKit.app"
+               BlueprintName = "LookInsideExampleAppKit"
                ReferencedContainer = "container:LookInsideExample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -45,9 +45,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B0B5DBD01FD27CDD46F8F0F5"
-            BuildableName = "LookInsideExample.app"
-            BlueprintName = "LookInsideExample"
+            BlueprintIdentifier = "92D45C3E0560401473964B2F"
+            BuildableName = "LookInsideExampleAppKit.app"
+            BlueprintName = "LookInsideExampleAppKit"
             ReferencedContainer = "container:LookInsideExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,9 +62,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "B0B5DBD01FD27CDD46F8F0F5"
-            BuildableName = "LookInsideExample.app"
-            BlueprintName = "LookInsideExample"
+            BlueprintIdentifier = "92D45C3E0560401473964B2F"
+            BuildableName = "LookInsideExampleAppKit.app"
+            BlueprintName = "LookInsideExampleAppKit"
             ReferencedContainer = "container:LookInsideExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

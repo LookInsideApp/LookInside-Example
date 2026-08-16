@@ -2,6 +2,8 @@ import Foundation
 import ProjectDescription
 
 let targetName = "LookInsideExample"
+let uiKitTargetName = "LookInsideExampleUIKit"
+let appKitTargetName = "LookInsideExampleAppKit"
 let localServerPath = Environment.lookinsideServerPath.getString(default: "")
     .trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -67,6 +69,7 @@ let project = Project(
             infoPlist: .file(path: "Sources/LookInsideExampleApp/Info.plist"),
             sources: [
                 "Sources/LookInsideExampleApp/**/*.swift",
+                "Sources/DemoShared/LookInsideServerRuntime.swift",
             ],
             dependencies: [
                 .package(product: serverProduct),
@@ -83,6 +86,60 @@ let project = Project(
                 defaultSettings: .recommended(excluding: xcconfigManagedSettings)
             )
         ),
+        .target(
+            name: uiKitTargetName,
+            destinations: [.iPhone, .iPad],
+            product: .app,
+            productName: uiKitTargetName,
+            bundleId: "$(LOOKINSIDE_EXAMPLE_UIKIT_BUNDLE_ID)",
+            deploymentTargets: .iOS("16.0"),
+            infoPlist: .file(path: "Sources/LookInsideExampleUIKit/Info.plist"),
+            sources: [
+                "Sources/LookInsideExampleUIKit/**/*.swift",
+                "Sources/DemoShared/**/*.swift",
+            ],
+            dependencies: [
+                .package(product: serverProduct),
+            ],
+            settings: .settings(
+                base: [
+                    "LD_RUNPATH_SEARCH_PATHS": [
+                        "$(inherited)",
+                        "@executable_path/Frameworks",
+                    ],
+                ],
+                configurations: configurations,
+                defaultSettings: .recommended(excluding: xcconfigManagedSettings)
+            )
+        ),
+        .target(
+            name: appKitTargetName,
+            destinations: [.mac],
+            product: .app,
+            productName: appKitTargetName,
+            bundleId: "$(LOOKINSIDE_EXAMPLE_APPKIT_BUNDLE_ID)",
+            // Matches the minimum the prebuilt LookInsideServer.framework is
+            // built for; anything lower links with a version warning.
+            deploymentTargets: .macOS("14.0"),
+            infoPlist: .file(path: "Sources/LookInsideExampleAppKit/Info.plist"),
+            sources: [
+                "Sources/LookInsideExampleAppKit/**/*.swift",
+                "Sources/DemoShared/**/*.swift",
+            ],
+            dependencies: [
+                .package(product: serverProduct),
+            ],
+            settings: .settings(
+                base: [
+                    "LD_RUNPATH_SEARCH_PATHS": [
+                        "$(inherited)",
+                        "@executable_path/../Frameworks",
+                    ],
+                ],
+                configurations: configurations,
+                defaultSettings: .recommended(excluding: xcconfigManagedSettings)
+            )
+        ),
     ],
     schemes: [
         .scheme(
@@ -90,6 +147,20 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target(targetName)]),
             runAction: .runAction(configuration: "Debug", executable: .target(targetName)),
+            archiveAction: .archiveAction(configuration: "Release")
+        ),
+        .scheme(
+            name: uiKitTargetName,
+            shared: true,
+            buildAction: .buildAction(targets: [.target(uiKitTargetName)]),
+            runAction: .runAction(configuration: "Debug", executable: .target(uiKitTargetName)),
+            archiveAction: .archiveAction(configuration: "Release")
+        ),
+        .scheme(
+            name: appKitTargetName,
+            shared: true,
+            buildAction: .buildAction(targets: [.target(appKitTargetName)]),
+            runAction: .runAction(configuration: "Debug", executable: .target(appKitTargetName)),
             archiveAction: .archiveAction(configuration: "Release")
         ),
     ],

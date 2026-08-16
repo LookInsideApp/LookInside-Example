@@ -4,6 +4,8 @@
 //
 
 LOOKINSIDE_EXAMPLE_BUNDLE_ID = app.lookinside.example
+LOOKINSIDE_EXAMPLE_UIKIT_BUNDLE_ID = app.lookinside.example.uikit
+LOOKINSIDE_EXAMPLE_APPKIT_BUNDLE_ID = app.lookinside.example.appkit
 
 DEVELOPMENT_TEAM =
 CODE_SIGN_STYLE = Automatic
