@@ -58,7 +58,9 @@ private struct StatusView: View {
             .navigationTitle("Status")
             .onReceive(refreshTimer) { _ in
                 let value = LookInsideServerRuntime.isLicensed
-                if value != isLicensed { isLicensed = value }
+                if value != isLicensed {
+                    isLicensed = value
+                }
             }
             .onReceive(NotificationCenter.default.publisher(for: .LookInsideServerLicenseStateDidChange)) { _ in
                 isLicensed = LookInsideServerRuntime.isLicensed

@@ -1,6 +1,6 @@
 import SwiftUI
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #endif
 
 enum DemoTheme {
@@ -11,25 +11,25 @@ enum DemoTheme {
 
     static var groupedBackground: Color {
         #if canImport(UIKit)
-        Color(uiColor: .systemGroupedBackground)
+            Color(uiColor: .systemGroupedBackground)
         #else
-        Color(nsColor: .windowBackgroundColor)
+            Color(nsColor: .windowBackgroundColor)
         #endif
     }
 
     static var secondaryGroupedBackground: Color {
         #if canImport(UIKit)
-        Color(uiColor: .secondarySystemGroupedBackground)
+            Color(uiColor: .secondarySystemGroupedBackground)
         #else
-        Color(nsColor: .controlBackgroundColor)
+            Color(nsColor: .controlBackgroundColor)
         #endif
     }
 
     static var separator: Color {
         #if canImport(UIKit)
-        Color(uiColor: .separator)
+            Color(uiColor: .separator)
         #else
-        Color(nsColor: .separatorColor)
+            Color(nsColor: .separatorColor)
         #endif
     }
 }
@@ -67,26 +67,24 @@ extension Color {
 }
 
 extension View {
-    @ViewBuilder
     func demoCardBackground(corner: CGFloat = DemoTheme.cardCorner) -> some View {
-        self.background(
+        background(
             RoundedRectangle(cornerRadius: corner, style: .continuous)
                 .fill(DemoTheme.secondaryGroupedBackground)
         )
     }
 
     func demoContentWidth(_ maxWidth: CGFloat = DemoTheme.contentMaxWidth) -> some View {
-        self
-            .frame(maxWidth: maxWidth)
+        frame(maxWidth: maxWidth)
             .frame(maxWidth: .infinity)
     }
 
     @ViewBuilder
-    func demoOnChange<V: Equatable>(of value: V, perform action: @escaping () -> Void) -> some View {
+    func demoOnChange(of value: some Equatable, perform action: @escaping () -> Void) -> some View {
         if #available(iOS 17.0, macOS 14.0, macCatalyst 17.0, *) {
-            self.onChange(of: value) { _, _ in action() }
+            onChange(of: value) { _, _ in action() }
         } else {
-            self.onChange(of: value) { _ in action() }
+            onChange(of: value) { _ in action() }
         }
     }
 }

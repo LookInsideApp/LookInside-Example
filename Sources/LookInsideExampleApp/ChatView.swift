@@ -181,9 +181,9 @@ private struct ConversationDetail: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 HStack {
-                    Button { } label: { Image(systemName: "video") }
-                    Button { } label: { Image(systemName: "phone") }
-                    Button { } label: { Image(systemName: "info.circle") }
+                    Button {} label: { Image(systemName: "video") }
+                    Button {} label: { Image(systemName: "phone") }
+                    Button {} label: { Image(systemName: "info.circle") }
                 }
             }
         }
@@ -225,57 +225,60 @@ private struct ConversationDetail: View {
                     }
                 }
 
-                if message.isFromMe { Spacer(minLength: 40) }
+                if message.isFromMe {
+                    Spacer(minLength: 40)
+                }
 
                 bubbleContent(message: message)
 
-                if !message.isFromMe { Spacer(minLength: 40) }
+                if !message.isFromMe {
+                    Spacer(minLength: 40)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: message.isFromMe ? .trailing : .leading)
     }
 
+    @ViewBuilder
     private func bubbleContent(message: ChatMessage) -> some View {
-        Group {
-            switch message.kind {
-            case .text(let body):
-                Text(body)
-                    .font(.body)
-                    .foregroundStyle(message.isFromMe ? .white : .primary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(
-                        message.isFromMe
-                            ? AnyShapeStyle(Color.accentColor.gradient)
-                            : AnyShapeStyle(DemoTheme.secondaryGroupedBackground),
-                        in: RoundedRectangle(cornerRadius: DemoTheme.bubbleCorner, style: .continuous)
-                    )
-            case .image(let symbol, let tint):
-                ZStack {
-                    LinearGradient(colors: [tint.opacity(0.85), tint.opacity(0.45)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    Image(systemName: symbol)
-                        .font(.system(size: 28, weight: .light))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: 160, height: 110)
-                .clipShape(RoundedRectangle(cornerRadius: DemoTheme.bubbleCorner, style: .continuous))
-            case .audio(let duration):
-                HStack(spacing: 10) {
-                    Image(systemName: "play.fill")
-                    waveform
-                    Text(formatDuration(duration))
-                        .font(.caption.monospacedDigit())
-                }
+        switch message.kind {
+        case let .text(body):
+            Text(body)
+                .font(.body)
                 .foregroundStyle(message.isFromMe ? .white : .primary)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 12)
+                .padding(.vertical, 10)
                 .background(
                     message.isFromMe
                         ? AnyShapeStyle(Color.accentColor.gradient)
                         : AnyShapeStyle(DemoTheme.secondaryGroupedBackground),
                     in: RoundedRectangle(cornerRadius: DemoTheme.bubbleCorner, style: .continuous)
                 )
+        case let .image(symbol, tint):
+            ZStack {
+                LinearGradient(colors: [tint.opacity(0.85), tint.opacity(0.45)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                Image(systemName: symbol)
+                    .font(.system(size: 28, weight: .light))
+                    .foregroundStyle(.white)
             }
+            .frame(width: 160, height: 110)
+            .clipShape(RoundedRectangle(cornerRadius: DemoTheme.bubbleCorner, style: .continuous))
+        case let .audio(duration):
+            HStack(spacing: 10) {
+                Image(systemName: "play.fill")
+                waveform
+                Text(formatDuration(duration))
+                    .font(.caption.monospacedDigit())
+            }
+            .foregroundStyle(message.isFromMe ? .white : .primary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                message.isFromMe
+                    ? AnyShapeStyle(Color.accentColor.gradient)
+                    : AnyShapeStyle(DemoTheme.secondaryGroupedBackground),
+                in: RoundedRectangle(cornerRadius: DemoTheme.bubbleCorner, style: .continuous)
+            )
         }
     }
 
@@ -295,7 +298,7 @@ private struct ConversationDetail: View {
 
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 10) {
-            Button { } label: {
+            Button {} label: {
                 Image(systemName: "plus.circle")
                     .font(.title2)
                     .foregroundStyle(.secondary)
@@ -306,7 +309,7 @@ private struct ConversationDetail: View {
                 TextField("Message", text: $draft, axis: .vertical)
                     .lineLimit(1 ... 5)
                     .focused($inputFocused)
-                Button { } label: {
+                Button {} label: {
                     Image(systemName: "face.smiling")
                         .foregroundStyle(.secondary)
                 }
@@ -358,7 +361,10 @@ struct Conversation: Identifiable {
     let name: String
     let initials: String
     let tint: Color
-    var lastMessage: String { messages.last.map(messageSummary) ?? "" }
+    var lastMessage: String {
+        messages.last.map(messageSummary) ?? ""
+    }
+
     let timestamp: String
     var unreadCount: Int
     let isOnline: Bool
@@ -367,15 +373,17 @@ struct Conversation: Identifiable {
 
     private func messageSummary(_ message: ChatMessage) -> String {
         switch message.kind {
-        case .text(let body): return body
-        case .image: return "📷 Photo"
-        case .audio: return "🎙 Voice message"
+        case let .text(body): body
+        case .image: "📷 Photo"
+        case .audio: "🎙 Voice message"
         }
     }
 
     static let samples: [Conversation] = {
         let now = Date()
-        func minutes(_ delta: Int) -> Date { now.addingTimeInterval(TimeInterval(-delta * 60)) }
+        func minutes(_ delta: Int) -> Date {
+            now.addingTimeInterval(TimeInterval(-delta * 60))
+        }
 
         return [
             Conversation(
