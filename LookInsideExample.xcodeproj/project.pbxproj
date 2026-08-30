@@ -39,6 +39,7 @@
 		7BC617D435B7864244904044 /* StoryStripView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F6AAF30ADC6903DFD36F5B /* StoryStripView.swift */; };
 		7BDCDDE1ABDD033D00A1C95A /* PlaylistCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBF53A4BBDC461176E2780B7 /* PlaylistCardView.swift */; };
 		7CCCDB72F262CFCA05864DD2 /* MusicPlayerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B01629C0F9815BC26C9DAE36 /* MusicPlayerViewController.swift */; };
+		7EAB7306179A0D49508FB9F5 /* ControlsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E1171F40EEC771A1B4AC47 /* ControlsViewController.swift */; };
 		803ACEC824D90837E8F296A9 /* RootSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CE96B1F51ED8FAB4CAD6D05 /* RootSplitViewController.swift */; };
 		821BD65BEEEEB16E84CE1B89 /* LookInsideServer in Frameworks */ = {isa = PBXBuildFile; productRef = EB4DC37874B654A8206653DA /* LookInsideServer */; };
 		85B20EAE450059DC655E0867 /* SocialFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1AFC7DD99775D98785FEF6B /* SocialFeed.swift */; };
@@ -52,6 +53,7 @@
 		963B98998984073995C02236 /* MusicLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 948E08E33EF240610B948C03 /* MusicLibrary.swift */; };
 		A34A46DAEB5DA85156148174 /* PostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB02F49B5996A66E2BCFA7D8 /* PostCell.swift */; };
 		A54AB1EB54B62F600647FBB6 /* StatusViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0913883A9F39456FFE4CEEF7 /* StatusViewController.swift */; };
+		A5DD625E91F965804AEF398C /* ControlsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F818581AFF18D55E6FAA972B /* ControlsViewController.swift */; };
 		AA8C87AB0C067A7EA8F12F69 /* SocialFeedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0860BD77165E3F07DCE0FAB9 /* SocialFeedViewController.swift */; };
 		AB10F8CC82FE1E4F8418A8A3 /* AvatarBadgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF1E0A733974EF8ED32A343 /* AvatarBadgeView.swift */; };
 		AB9EFD6D0EC82E9D70DAEAD9 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBFFC2B56D8AFF58AD8C4994 /* ChatStore.swift */; };
@@ -149,6 +151,7 @@
 		948E08E33EF240610B948C03 /* MusicLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLibrary.swift; sourceTree = "<group>"; };
 		997BBB69D0C1F97DA7C18157 /* RootTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabBarController.swift; sourceTree = "<group>"; };
 		99D667A88A740F690FD85DAF /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		99E1171F40EEC771A1B4AC47 /* ControlsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlsViewController.swift; sourceTree = "<group>"; };
 		9D83087B275DDCEB26C4F136 /* MusicPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicPlayerView.swift; sourceTree = "<group>"; };
 		A2E0CE581BD28694ED94AE4C /* SocialFeedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialFeedView.swift; sourceTree = "<group>"; };
 		A85948ACD3CD29AF636B8A98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -166,6 +169,7 @@
 		EDE357CAB144EFFDE2F538BF /* MessageBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageBubbleView.swift; sourceTree = "<group>"; };
 		EEDF271FA294245F49C7DE48 /* ChatDirectory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDirectory.swift; sourceTree = "<group>"; };
 		F26A7B9D8018AE71BC677CAE /* MainMenuBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuBuilder.swift; sourceTree = "<group>"; };
+		F818581AFF18D55E6FAA972B /* ControlsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlsViewController.swift; sourceTree = "<group>"; };
 		F9F0CC40D1B1EFFCC299D216 /* ComposerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerCell.swift; sourceTree = "<group>"; };
 		FBFFC2B56D8AFF58AD8C4994 /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -271,6 +275,14 @@
 			name = Project;
 			sourceTree = "<group>";
 		};
+		6CA5B1752DC06D8E5972ADED /* Controls */ = {
+			isa = PBXGroup;
+			children = (
+				99E1171F40EEC771A1B4AC47 /* ControlsViewController.swift */,
+			);
+			path = Controls;
+			sourceTree = "<group>";
+		};
 		7B5D6F4AFA6285FE281198DA /* Configuration */ = {
 			isa = PBXGroup;
 			children = (
@@ -285,6 +297,7 @@
 			isa = PBXGroup;
 			children = (
 				D104295728A5EBEE218DFD12 /* Chat */,
+				6CA5B1752DC06D8E5972ADED /* Controls */,
 				E456F9952B29705AAC40AC43 /* MusicPlayer */,
 				D5A8D485AD62F51DD2BD4847 /* SocialFeed */,
 				E4D3F8B91FF79D931FE80AC5 /* Status */,
@@ -309,6 +322,14 @@
 				343DFD241000BD5E7CDEBD24 /* QueueViewController.swift */,
 			);
 			path = MusicPlayer;
+			sourceTree = "<group>";
+		};
+		9C95CA526B86C3E7EC243D97 /* Controls */ = {
+			isa = PBXGroup;
+			children = (
+				F818581AFF18D55E6FAA972B /* ControlsViewController.swift */,
+			);
+			path = Controls;
 			sourceTree = "<group>";
 		};
 		BE8B9A2E3730E7C94FDE888C /* Support */ = {
@@ -379,6 +400,7 @@
 			isa = PBXGroup;
 			children = (
 				F38BFA42EFF4AD0723C6CB87 /* Chat */,
+				9C95CA526B86C3E7EC243D97 /* Controls */,
 				89B6A8467282D8EA859590C3 /* MusicPlayer */,
 				0D773F2AAE1E79F2AE309DEA /* SocialFeed */,
 				F7655386723C13B7A201F4CE /* Status */,
@@ -564,6 +586,7 @@
 				B6756EA2742268DAFEB6B745 /* ConversationDetailViewController.swift in Sources */,
 				1C3FCA32C0295258CF3A9C83 /* ConversationListViewController.swift in Sources */,
 				BD7DE78DC4604D8CF4AB822D /* MessageBubbleCell.swift in Sources */,
+				A5DD625E91F965804AEF398C /* ControlsViewController.swift in Sources */,
 				3D7503702E233636E4FE74A7 /* AlbumArtworkView.swift in Sources */,
 				B387EA90A5FA9BF1C665AFEB /* MusicPlayerViewController.swift in Sources */,
 				F6B14A4C38744D264E47B0E1 /* PlaylistCardView.swift in Sources */,
@@ -596,6 +619,7 @@
 				FD7263DE29E6C2551D61B5B3 /* ChatViewController.swift in Sources */,
 				C414DF2B6A7D0D35C803BF6F /* ConversationTableCellView.swift in Sources */,
 				4145BC610E4430CD45F88C06 /* MessageBubbleView.swift in Sources */,
+				7EAB7306179A0D49508FB9F5 /* ControlsViewController.swift in Sources */,
 				42D19736846C034827C57512 /* MainMenuBuilder.swift in Sources */,
 				5B0781DBD026F4CCD32B34F5 /* MainWindowController.swift in Sources */,
 				38CBB39333B1DA69B55508CB /* AlbumArtworkView.swift in Sources */,

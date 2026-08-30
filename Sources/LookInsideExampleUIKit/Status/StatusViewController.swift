@@ -33,6 +33,7 @@ final class StatusViewController: UIViewController {
                 .detail(symbolName: "play.circle", text: "Music player · UIScrollView + UIStackView"),
                 .detail(symbolName: "square.text.square", text: "Social feed · UICollectionView"),
                 .detail(symbolName: "bubble.left.and.bubble.right", text: "Chat · UISplitViewController"),
+                .detail(symbolName: "slider.horizontal.3", text: "Controls · the stock UIKit control gallery"),
             ]
         ),
         Section(

@@ -32,6 +32,7 @@ final class SidebarViewController: NSViewController {
             SidebarNode(title: DemoDestination.music.title, symbolName: DemoDestination.music.symbolName, destination: .music),
             SidebarNode(title: DemoDestination.feed.title, symbolName: DemoDestination.feed.symbolName, destination: .feed),
             SidebarNode(title: DemoDestination.chat.title, symbolName: DemoDestination.chat.symbolName, destination: .chat),
+            SidebarNode(title: DemoDestination.controls.title, symbolName: DemoDestination.controls.symbolName, destination: .controls),
         ]),
         SidebarNode(title: "Server", children: [
             SidebarNode(title: DemoDestination.status.title, symbolName: DemoDestination.status.symbolName, destination: .status),

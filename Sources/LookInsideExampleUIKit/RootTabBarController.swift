@@ -25,6 +25,13 @@ final class RootTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "bubble.left.and.bubble.right.fill")
         )
 
+        let controlsNavigationController = UINavigationController(rootViewController: ControlsViewController())
+        controlsNavigationController.tabBarItem = UITabBarItem(
+            title: "Controls",
+            image: UIImage(systemName: "slider.horizontal.3"),
+            selectedImage: UIImage(systemName: "slider.horizontal.3")
+        )
+
         let statusNavigationController = UINavigationController(rootViewController: StatusViewController())
         statusNavigationController.tabBarItem = UITabBarItem(
             title: "Status",
@@ -36,6 +43,7 @@ final class RootTabBarController: UITabBarController {
             musicNavigationController,
             feedNavigationController,
             chatSplitViewController,
+            controlsNavigationController,
             statusNavigationController,
         ]
 

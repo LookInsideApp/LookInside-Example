@@ -126,6 +126,7 @@ final class StatusViewController: NSViewController {
             ("play.circle", "Music player · NSStackView + Core Animation"),
             ("square.text.square", "Social feed · view-based NSTableView"),
             ("bubble.left.and.bubble.right", "Chat · nested NSSplitViewController"),
+            ("slider.horizontal.3", "Controls · the stock AppKit control gallery"),
         ]
         for demoRow in demoRows {
             let symbolImageView = NSImageView()

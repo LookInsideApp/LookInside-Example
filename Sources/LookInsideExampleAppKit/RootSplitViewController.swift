@@ -5,6 +5,7 @@ enum DemoDestination: String, CaseIterable {
     case music
     case feed
     case chat
+    case controls
     case status
 
     var title: String {
@@ -12,6 +13,7 @@ enum DemoDestination: String, CaseIterable {
         case .music: "Music"
         case .feed: "Feed"
         case .chat: "Chat"
+        case .controls: "Controls"
         case .status: "Status"
         }
     }
@@ -21,6 +23,7 @@ enum DemoDestination: String, CaseIterable {
         case .music: "play.circle"
         case .feed: "square.text.square"
         case .chat: "bubble.left.and.bubble.right"
+        case .controls: "slider.horizontal.3"
         case .status: "info.circle"
         }
     }
@@ -34,6 +37,7 @@ final class RootSplitViewController: NSSplitViewController {
     private lazy var musicPlayerViewController = MusicPlayerViewController()
     private lazy var socialFeedViewController = SocialFeedViewController()
     private lazy var chatViewController = ChatViewController()
+    private lazy var controlsViewController = ControlsViewController()
     private lazy var statusViewController = StatusViewController()
 
     override func viewDidLoad() {
@@ -60,6 +64,7 @@ final class RootSplitViewController: NSSplitViewController {
         case .music: musicPlayerViewController
         case .feed: socialFeedViewController
         case .chat: chatViewController
+        case .controls: controlsViewController
         case .status: statusViewController
         }
         detailContainerViewController.show(destinationViewController)
