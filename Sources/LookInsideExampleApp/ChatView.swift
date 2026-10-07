@@ -80,9 +80,9 @@ struct ChatView: View {
             Image(systemName: "bubble.left.and.bubble.right")
                 .font(.system(size: 48, weight: .light))
                 .foregroundStyle(.tertiary)
-            Text("Pick a conversation")
-                .font(.title3.weight(.medium))
-            Text("Or start a new one with the compose button.")
+            Text("No Conversation Selected")
+                .font(.title3.weight(.semibold))
+            Text("Choose a conversation from the list.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -317,9 +317,7 @@ private struct ConversationDetail: View {
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
-            .background(
-                Capsule().fill(DemoTheme.secondaryGroupedBackground)
-            )
+            .demoGlassCapsule()
 
             Button {
                 send()

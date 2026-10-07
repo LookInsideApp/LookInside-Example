@@ -54,7 +54,7 @@ struct SocialFeedView: View {
         HStack(alignment: .top, spacing: 12) {
             AvatarBadge(initials: "Y", tint: .blue, size: 38)
             VStack(alignment: .leading, spacing: 10) {
-                TextField("Share something with your friends...", text: $newPost, axis: .vertical)
+                TextField("What’s on your mind?", text: $newPost, axis: .vertical)
                     .lineLimit(1 ... 4)
                     .focused($composerFocused)
                     .padding(12)
