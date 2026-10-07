@@ -3,6 +3,7 @@ import UIKit
 /// Two-column chat, matching the SwiftUI example's `NavigationSplitView`.
 final class ChatSplitViewController: UISplitViewController {
     private let store = ChatStore()
+    private var hasSelectedConversation = false
 
     init() {
         super.init(style: .doubleColumn)
@@ -18,6 +19,7 @@ final class ChatSplitViewController: UISplitViewController {
         preferredDisplayMode = .oneBesideSecondary
         preferredSplitBehavior = .tile
         presentsWithGesture = true
+        delegate = self
     }
 
     @available(*, unavailable)
@@ -26,9 +28,22 @@ final class ChatSplitViewController: UISplitViewController {
     }
 
     private func showConversation(_ identifier: Conversation.ID) {
+        hasSelectedConversation = true
         let detailViewController = ConversationDetailViewController(store: store, conversationID: identifier)
         setViewController(UINavigationController(rootViewController: detailViewController), for: .secondary)
         show(.secondary)
+    }
+}
+
+extension ChatSplitViewController: UISplitViewControllerDelegate {
+    /// On a compact width the split view collapses to one column. Until a
+    /// conversation is picked, that column must be the list — not the empty
+    /// placeholder.
+    func splitViewController(
+        _: UISplitViewController,
+        topColumnForCollapsingToProposedTopColumn proposedTopColumn: UISplitViewController.Column
+    ) -> UISplitViewController.Column {
+        hasSelectedConversation ? proposedTopColumn : .primary
     }
 }
 
@@ -45,13 +60,13 @@ final class ConversationPlaceholderViewController: UIViewController {
         symbolImageView.contentMode = .scaleAspectFit
 
         let titleLabel = UILabel(
-            text: "Pick a conversation",
-            font: .preferredFont(forTextStyle: .title3).withWeight(.medium),
+            text: "No Conversation Selected",
+            font: .preferredFont(forTextStyle: .title3).withWeight(.semibold),
             color: DemoPalette.primaryLabel,
             alignment: .center
         )
         let subtitleLabel = UILabel(
-            text: "Or start a new one with the compose button.",
+            text: "Choose a conversation from the list.",
             font: .preferredFont(forTextStyle: .subheadline),
             color: DemoPalette.secondaryLabel,
             alignment: .center,

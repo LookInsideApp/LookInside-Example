@@ -1,13 +1,13 @@
 import UIKit
 
-/// A gallery of the stock UIKit controls, grouped into cards. Every control
+/// A gallery of the stock UIKit controls, grouped into form sections. Every control
 /// here exists to give the inspector an interesting hierarchy to walk:
 /// configuration-based buttons, text inputs with side views, the value
 /// controls, async spinners, pickers, and a card whose gradient lives in a
 /// bare CALayer sublayer rather than in any view.
 final class ControlsViewController: UIViewController {
     private let scrollView = UIScrollView()
-    private let contentStackView = UIStackView(axis: .vertical, spacing: 16)
+    private let contentStackView = UIStackView(axis: .vertical, spacing: 28)
 
     private let stepper = UIStepper()
     private let stepperValueLabel = UILabel(
@@ -42,53 +42,26 @@ final class ControlsViewController: UIViewController {
                 lessThanOrEqualTo: scrollView.frameLayoutGuide.widthAnchor,
                 constant: -40
             ),
+            // Both just under required: above every control's content
+            // hugging, so the column fills the width rather than shrinking to
+            // the narrowest control.
             contentStackView.widthAnchor.constraint(lessThanOrEqualToConstant: DemoMetrics.contentMaximumWidth)
-                .withPriority(.defaultHigh),
+                .withPriority(.required - 1),
             contentStackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -40)
-                .withPriority(.defaultHigh - 1),
+                .withPriority(.required - 2),
         ])
 
-        contentStackView.addArrangedSubview(makeButtonsCard())
-        contentStackView.addArrangedSubview(makeTextInputCard())
-        contentStackView.addArrangedSubview(makeTogglesAndSlidersCard())
-        contentStackView.addArrangedSubview(makeProgressCard())
-        contentStackView.addArrangedSubview(makePickersCard())
-        contentStackView.addArrangedSubview(makeLayersCard())
+        contentStackView.addArrangedSubview(makeButtonsSection())
+        contentStackView.addArrangedSubview(makeTextInputSection())
+        contentStackView.addArrangedSubview(makeTogglesAndSlidersSection())
+        contentStackView.addArrangedSubview(makeProgressSection())
+        contentStackView.addArrangedSubview(makePickersSection())
+        contentStackView.addArrangedSubview(makeLayersSection())
     }
 
-    // MARK: - Cards
+    // MARK: - Sections
 
-    private func makeCard(title: String, contentViews: [UIView]) -> UIView {
-        let card = CardView()
-        let titleLabel = UILabel(
-            text: title,
-            font: .systemFont(ofSize: 13, weight: .semibold),
-            color: DemoPalette.secondaryLabel
-        )
-        let stackView = UIStackView(axis: .vertical, spacing: 14, arrangedSubviews: [titleLabel] + contentViews)
-        stackView.setCustomSpacing(10, after: titleLabel)
-        card.addSubview(stackView)
-        stackView.pinEdges(to: card, insets: UIEdgeInsets(top: 14, left: 16, bottom: 16, right: 16))
-        return card
-    }
-
-    private func makeRow(caption: String, control: UIView) -> UIView {
-        let captionLabel = UILabel(
-            text: caption,
-            font: .systemFont(ofSize: 15),
-            color: DemoPalette.primaryLabel
-        )
-        captionLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        control.setContentHuggingPriority(.required, for: .horizontal)
-        return UIStackView(
-            axis: .horizontal,
-            spacing: 12,
-            alignment: .center,
-            arrangedSubviews: [captionLabel, control]
-        )
-    }
-
-    private func makeButtonsCard() -> UIView {
+    private func makeButtonsSection() -> UIView {
         let filledButton = UIButton(configuration: .filled())
         filledButton.configuration?.title = "Filled"
         let tintedButton = UIButton(configuration: .tinted())
@@ -97,24 +70,26 @@ final class ControlsViewController: UIViewController {
         grayButton.configuration?.title = "Gray"
         let borderedButton = UIButton(configuration: .bordered())
         borderedButton.configuration?.title = "Bordered"
-        let buttonRow = UIStackView(
-            axis: .horizontal,
-            spacing: 10,
-            alignment: .center,
-            arrangedSubviews: [filledButton, tintedButton, grayButton, borderedButton, UIView()]
-        )
+        for button in [filledButton, tintedButton, grayButton, borderedButton] {
+            button.configuration?.cornerStyle = .capsule
+            button.configuration?.titleLineBreakMode = .byTruncatingTail
+        }
 
-        let menuButton = UIButton(configuration: .bordered())
-        menuButton.configuration?.title = "Sort by"
-        menuButton.configuration?.image = UIImage(systemName: "chevron.up.chevron.down")
-        menuButton.configuration?.imagePlacement = .trailing
-        menuButton.configuration?.imagePadding = 6
+        // Two rows of two, so the titles never wrap on a narrow phone.
+        let buttonGridStackView = UIStackView(axis: .vertical, spacing: 10, arrangedSubviews: [
+            UIStackView(axis: .horizontal, spacing: 10, distribution: .fillEqually, arrangedSubviews: [filledButton, tintedButton]),
+            UIStackView(axis: .horizontal, spacing: 10, distribution: .fillEqually, arrangedSubviews: [grayButton, borderedButton]),
+        ])
+
+        let menuButton = UIButton(configuration: .plain())
+        menuButton.configuration?.contentInsets = .zero
+        menuButton.configuration?.indicator = .popup
         menuButton.showsMenuAsPrimaryAction = true
         menuButton.changesSelectionAsPrimaryAction = true
         menuButton.menu = UIMenu(children: [
-            UIAction(title: "Name") { _ in },
-            UIAction(title: "Date added") { _ in },
-            UIAction(title: "Play count") { _ in },
+            UIAction(title: "Name", state: .on) { _ in },
+            UIAction(title: "Date Added") { _ in },
+            UIAction(title: "Play Count") { _ in },
         ])
 
         let symbolButton = UIButton(type: .system)
@@ -122,35 +97,20 @@ final class ControlsViewController: UIViewController {
         symbolButton.setImage(UIImage(systemName: "heart.fill"), for: .normal)
         symbolButton.tintColor = .systemPink
 
-        let pullDownRow = UIStackView(
-            axis: .horizontal,
-            spacing: 10,
-            alignment: .center,
-            arrangedSubviews: [menuButton, symbolButton, UIView()]
-        )
-
         let segmentedControl = UISegmentedControl(items: ["Day", "Week", "Month", "Year"])
         segmentedControl.selectedSegmentIndex = 1
 
-        return makeCard(title: "BUTTONS", contentViews: [buttonRow, pullDownRow, segmentedControl])
+        return FormSectionView(title: "Buttons", rows: [
+            FormContentRowView(contentView: buttonGridStackView),
+            FormRowView(title: "Sort by", accessory: menuButton),
+            FormRowView(title: "Favorite", accessory: symbolButton),
+            FormContentRowView(contentView: segmentedControl),
+        ])
     }
 
-    private func makeTextInputCard() -> UIView {
-        let textField = UITextField()
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.borderStyle = .roundedRect
-        textField.placeholder = "Name"
-        let personImageView = UIImageView(image: UIImage(systemName: "person.circle"))
-        personImageView.tintColor = DemoPalette.secondaryLabel
-        personImageView.contentMode = .center
-        personImageView.frame = CGRect(x: 0, y: 0, width: 28, height: 22)
-        textField.leftView = personImageView
-        textField.leftViewMode = .always
-
-        let secureTextField = UITextField()
-        secureTextField.translatesAutoresizingMaskIntoConstraints = false
-        secureTextField.borderStyle = .roundedRect
-        secureTextField.placeholder = "Password"
+    private func makeTextInputSection() -> UIView {
+        let textField = makeFormTextField(placeholder: "Name", symbolName: "person")
+        let secureTextField = makeFormTextField(placeholder: "Password", symbolName: "lock")
         secureTextField.isSecureTextEntry = true
 
         let searchTextField = UISearchTextField()
@@ -160,38 +120,69 @@ final class ControlsViewController: UIViewController {
         let textView = UITextView()
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.isScrollEnabled = false
-        textView.font = .systemFont(ofSize: 15)
+        textView.font = .preferredFont(forTextStyle: .body)
+        textView.adjustsFontForContentSizeCategory = true
         textView.textColor = DemoPalette.primaryLabel
-        textView.backgroundColor = DemoPalette.groupedBackground
-        textView.layer.cornerRadius = 8
-        textView.textContainerInset = UIEdgeInsets(top: 8, left: 6, bottom: 8, right: 6)
-        textView.text = "A UITextView with a couple of lines of content, so the text container and its fragment layers have something to show in the inspector."
+        textView.backgroundColor = .clear
+        textView.textContainerInset = .zero
+        textView.textContainer.lineFragmentPadding = 0
+        textView.text = "Notes live in a UITextView, so the inspector can show its text container and fragment layers."
 
-        return makeCard(title: "TEXT INPUT", contentViews: [textField, secureTextField, searchTextField, textView])
+        return FormSectionView(title: "Text Input", rows: [
+            FormContentRowView(contentView: textField),
+            FormContentRowView(contentView: secureTextField),
+            FormContentRowView(contentView: searchTextField, insets: UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)),
+            FormContentRowView(contentView: textView),
+        ])
     }
 
-    private func makeTogglesAndSlidersCard() -> UIView {
+    /// A borderless field with a leading symbol in its `leftView`.
+    private func makeFormTextField(placeholder: String, symbolName: String) -> UITextField {
+        let textField = UITextField()
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.borderStyle = .none
+        textField.placeholder = placeholder
+        textField.font = .preferredFont(forTextStyle: .body)
+        textField.adjustsFontForContentSizeCategory = true
+        // The side view sizes from its frame only when it has no intrinsic
+        // size, so the symbol sits in a fixed-width container.
+        let symbolImageView = UIImageView(image: UIImage(systemName: symbolName))
+        symbolImageView.tintColor = DemoPalette.secondaryLabel
+        symbolImageView.contentMode = .center
+        symbolImageView.frame = CGRect(x: 0, y: 0, width: 22, height: 22)
+        let leftContainerView = UIView(frame: CGRect(x: 0, y: 0, width: 32, height: 22))
+        leftContainerView.addSubview(symbolImageView)
+        textField.leftView = leftContainerView
+        textField.leftViewMode = .always
+        textField.heightAnchor.constraint(greaterThanOrEqualToConstant: 24).isActive = true
+        return textField
+    }
+
+    private func makeTogglesAndSlidersSection() -> UIView {
         let switchControl = UISwitch()
         switchControl.isOn = true
 
         slider.translatesAutoresizingMaskIntoConstraints = false
         slider.minimumValueImage = UIImage(systemName: "speaker.fill")
         slider.maximumValueImage = UIImage(systemName: "speaker.wave.3.fill")
+        slider.tintColor = DemoPalette.accent
         slider.value = 0.4
         slider.addTarget(self, action: #selector(sliderValueDidChange), for: .valueChanged)
-        let sliderRow = UIStackView(
+        sliderValueLabel.setContentHuggingPriority(.required, for: .horizontal)
+        sliderValueLabel.textAlignment = .right
+        sliderValueLabel.widthAnchor.constraint(equalToConstant: 40).isActive = true
+        let sliderRowStackView = UIStackView(
             axis: .horizontal,
             spacing: 12,
             alignment: .center,
             arrangedSubviews: [slider, sliderValueLabel]
         )
-        sliderValueLabel.setContentHuggingPriority(.required, for: .horizontal)
 
         stepper.value = 5
         stepper.minimumValue = 0
         stepper.maximumValue = 10
         stepper.addTarget(self, action: #selector(stepperValueDidChange), for: .valueChanged)
-        let stepperControlRow = UIStackView(
+        let stepperControlStackView = UIStackView(
             axis: .horizontal,
             spacing: 12,
             alignment: .center,
@@ -202,33 +193,34 @@ final class ControlsViewController: UIViewController {
         pageControl.translatesAutoresizingMaskIntoConstraints = false
         pageControl.numberOfPages = 5
         pageControl.currentPage = 2
-        pageControl.pageIndicatorTintColor = DemoPalette.separator
+        pageControl.pageIndicatorTintColor = DemoPalette.tertiaryLabel
         pageControl.currentPageIndicatorTintColor = DemoPalette.accent
 
-        return makeCard(title: "TOGGLES & SLIDERS", contentViews: [
-            makeRow(caption: "Notifications", control: switchControl),
-            sliderRow,
-            makeRow(caption: "Copies", control: stepperControlRow),
-            pageControl,
+        return FormSectionView(title: "Toggles and Sliders", rows: [
+            FormRowView(title: "Notifications", accessory: switchControl),
+            FormContentRowView(contentView: sliderRowStackView),
+            FormRowView(title: "Copies", accessory: stepperControlStackView),
+            FormRowView(title: "Page", accessory: pageControl),
         ])
     }
 
-    private func makeProgressCard() -> UIView {
+    private func makeProgressSection() -> UIView {
         let determinateProgressView = UIProgressView(progressViewStyle: .default)
         determinateProgressView.translatesAutoresizingMaskIntoConstraints = false
         determinateProgressView.progress = 0.65
+        determinateProgressView.widthAnchor.constraint(equalToConstant: 140).isActive = true
 
         let activityIndicatorView = UIActivityIndicatorView(style: .medium)
         activityIndicatorView.translatesAutoresizingMaskIntoConstraints = false
         activityIndicatorView.startAnimating()
 
-        return makeCard(title: "PROGRESS", contentViews: [
-            determinateProgressView,
-            makeRow(caption: "Syncing…", control: activityIndicatorView),
+        return FormSectionView(title: "Progress", rows: [
+            FormRowView(title: "Download", accessory: determinateProgressView),
+            FormRowView(title: "Syncing", accessory: activityIndicatorView),
         ])
     }
 
-    private func makePickersCard() -> UIView {
+    private func makePickersSection() -> UIView {
         let datePicker = UIDatePicker()
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.datePickerMode = .dateAndTime
@@ -239,35 +231,40 @@ final class ControlsViewController: UIViewController {
         colorWell.selectedColor = .systemIndigo
         colorWell.supportsAlpha = false
 
-        return makeCard(title: "PICKERS", contentViews: [
-            makeRow(caption: "Reminder", control: datePicker),
-            makeRow(caption: "Accent color", control: colorWell),
+        return FormSectionView(title: "Pickers", rows: [
+            FormRowView(title: "Reminder", accessory: datePicker),
+            FormRowView(title: "Accent color", accessory: colorWell),
         ])
     }
 
-    private func makeLayersCard() -> UIView {
+    private func makeLayersSection() -> UIView {
         // The gradient is a bare CALayer sublayer with no view of its own —
         // an orphan layer in the inspector's hierarchy.
         let gradientContainerView = GradientCardView()
         gradientContainerView.heightAnchor.constraint(equalToConstant: 72).isActive = true
 
-        let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 30, weight: .regular)
+        let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: 28, weight: .regular)
             .applying(UIImage.SymbolConfiguration.preferringMulticolor())
-        let symbolNames = ["cloud.sun.rain.fill", "thermometer.sun.fill", "wind", "moon.stars.fill"]
+        let symbolNames = ["sun.max.fill", "thermometer.sun.fill", "flame.fill", "leaf.fill"]
         let symbolImageViews: [UIView] = symbolNames.map { symbolName in
             let imageView = UIImageView(image: UIImage(systemName: symbolName, withConfiguration: symbolConfiguration))
             imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.contentMode = .center
+            // Tints the layers a symbol leaves uncoloured in multicolor mode.
+            imageView.tintColor = .systemIndigo
             return imageView
         }
-        let symbolRow = UIStackView(
+        let symbolRowStackView = UIStackView(
             axis: .horizontal,
             spacing: 0,
             distribution: .fillEqually,
             arrangedSubviews: symbolImageViews
         )
 
-        return makeCard(title: "IMAGES & LAYERS", contentViews: [gradientContainerView, symbolRow])
+        return FormSectionView(title: "Images and Layers", rows: [
+            FormContentRowView(contentView: gradientContainerView),
+            FormContentRowView(contentView: symbolRowStackView),
+        ])
     }
 
     // MARK: - Actions

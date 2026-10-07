@@ -1,6 +1,6 @@
 import UIKit
 
-/// A 168-point wide playlist tile for the horizontally scrolling "Made for you"
+/// A 168-point wide playlist tile for the horizontally scrolling "Made for You"
 /// strip.
 final class PlaylistCardView: UIView {
     private let artworkContainer = UIView()
