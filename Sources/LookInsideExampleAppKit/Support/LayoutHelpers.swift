@@ -101,6 +101,63 @@ extension NSButton {
     }
 }
 
+extension NSScrollView {
+    /// Overlay scrollers that hide whenever the content fits, so an idle pane
+    /// never shows an empty scroller track — even with "Show scroll bars:
+    /// Always" selected in System Settings.
+    func applyDemoScrollerStyle() {
+        scrollerStyle = .overlay
+        autohidesScrollers = true
+    }
+
+    /// Installs `columnView` as a top-aligned column inside a fresh vertical
+    /// scroll view that fills `containerView`. The column tracks the scroll
+    /// view's width up to `maximumWidth` and stays centred beyond it.
+    @discardableResult
+    static func installCenteredColumn(
+        _ columnView: NSView,
+        in containerView: NSView,
+        maximumWidth: CGFloat = DemoMetrics.contentMaximumWidth,
+        horizontalInset: CGFloat = 28,
+        verticalInset: CGFloat = 24
+    ) -> NSScrollView {
+        let scrollView = NSScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.hasVerticalScroller = true
+        scrollView.drawsBackground = false
+        scrollView.applyDemoScrollerStyle()
+
+        let documentView = FlippedView()
+        documentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.documentView = documentView
+        documentView.addSubview(columnView)
+        containerView.addSubview(scrollView)
+        scrollView.pinEdges(to: containerView)
+
+        let clipView = scrollView.contentView
+        let preferredWidthConstraint = columnView.widthAnchor.constraint(
+            equalTo: documentView.widthAnchor,
+            constant: -horizontalInset * 2
+        )
+        preferredWidthConstraint.priority = .fillAvailableWidth
+
+        NSLayoutConstraint.activate([
+            documentView.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
+            documentView.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
+            documentView.topAnchor.constraint(equalTo: clipView.topAnchor),
+            documentView.widthAnchor.constraint(equalTo: clipView.widthAnchor),
+
+            columnView.topAnchor.constraint(equalTo: documentView.topAnchor, constant: verticalInset),
+            columnView.bottomAnchor.constraint(equalTo: documentView.bottomAnchor, constant: -verticalInset),
+            columnView.centerXAnchor.constraint(equalTo: documentView.centerXAnchor),
+            columnView.leadingAnchor.constraint(greaterThanOrEqualTo: documentView.leadingAnchor, constant: horizontalInset),
+            columnView.widthAnchor.constraint(lessThanOrEqualToConstant: maximumWidth),
+            preferredWidthConstraint,
+        ])
+        return scrollView
+    }
+}
+
 /// A top-left origin view, used as the document view of vertical scroll views
 /// so content starts at the top instead of the AppKit default bottom-left.
 final class FlippedView: NSView {

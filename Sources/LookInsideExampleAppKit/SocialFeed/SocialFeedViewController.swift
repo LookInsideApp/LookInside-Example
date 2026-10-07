@@ -38,10 +38,11 @@ final class SocialFeedViewController: NSViewController {
             equalTo: containerView.widthAnchor,
             constant: -32
         )
-        preferredWidthConstraint.priority = .defaultHigh
+        preferredWidthConstraint.priority = .fillAvailableWidth
 
         NSLayoutConstraint.activate([
-            columnStackView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
+            // Full-size content view: start below the toolbar, not under it.
+            columnStackView.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: 12),
             columnStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
             columnStackView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             columnStackView.leadingAnchor.constraint(greaterThanOrEqualTo: containerView.leadingAnchor, constant: 16),
@@ -77,6 +78,7 @@ final class SocialFeedViewController: NSViewController {
         scrollView.documentView = tableView
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = false
+        scrollView.applyDemoScrollerStyle()
     }
 
     private func buildDataSource() {

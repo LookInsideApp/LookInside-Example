@@ -6,6 +6,9 @@ final class ConversationTableCellView: NSTableCellView {
     static let reuseIdentifier = NSUserInterfaceItemIdentifier("ConversationTableCellView")
 
     private let avatarBadgeView = AvatarBadgeView(initials: "", tint: .blue, diameter: 40)
+    private var nameLeadingToAvatarConstraint: NSLayoutConstraint!
+    private var nameLeadingToPinConstraint: NSLayoutConstraint!
+    private var previewTrailingToBadgeConstraint: NSLayoutConstraint!
     private let onlineIndicatorView = OnlineIndicatorView()
     private let pinImageView = NSImageView()
     private let nameLabel = NSTextField.demoLabel(
@@ -18,9 +21,8 @@ final class ConversationTableCellView: NSTableCellView {
         alignment: .right
     )
     private let previewLabel = NSTextField.demoLabel(
-        font: .preferredFont(forTextStyle: .caption1),
-        color: DemoPalette.secondaryLabel,
-        maximumNumberOfLines: 2
+        font: .preferredFont(forTextStyle: .subheadline),
+        color: DemoPalette.secondaryLabel
     )
     private let unreadBadgeView = CardBoxView(cornerRadius: 8, fillColor: DemoPalette.accent)
     private let unreadCountLabel = NSTextField.demoLabel(
@@ -33,65 +35,64 @@ final class ConversationTableCellView: NSTableCellView {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
 
-        let avatarContainerView = NSView()
-        avatarContainerView.translatesAutoresizingMaskIntoConstraints = false
-        avatarContainerView.addSubview(avatarBadgeView)
-        avatarContainerView.addSubview(onlineIndicatorView)
-
         pinImageView.translatesAutoresizingMaskIntoConstraints = false
         pinImageView.image = NSImage.demoSymbol("pin.fill", pointSize: 9)
         pinImageView.contentTintColor = .systemOrange
-        pinImageView.setContentHuggingPriority(.required, for: .horizontal)
-
-        timestampLabel.setContentHuggingPriority(.required, for: .horizontal)
-
-        let titleRowStackView = NSStackView(
-            orientation: .horizontal,
-            spacing: 4,
-            alignment: .firstBaseline,
-            views: [pinImageView, nameLabel, NSView.flexibleSpacer(), timestampLabel]
-        )
 
         unreadBadgeView.contentView?.addSubview(unreadCountLabel)
         if let badgeContentView = unreadBadgeView.contentView {
             unreadCountLabel.pinEdges(
                 to: badgeContentView,
-                insets: NSEdgeInsets(top: 1, left: 6, bottom: 1, right: 6)
+                insets: NSEdgeInsets(top: 1, left: 5, bottom: 1, right: 5)
             )
         }
 
-        let previewRowStackView = NSStackView(
-            orientation: .horizontal,
-            spacing: 6,
-            alignment: .top,
-            views: [previewLabel, unreadBadgeView]
-        )
+        for subview in [avatarBadgeView, onlineIndicatorView, pinImageView, nameLabel, timestampLabel, previewLabel, unreadBadgeView] {
+            addSubview(subview)
+        }
 
-        let textColumnStackView = NSStackView(
-            orientation: .vertical,
-            spacing: 3,
-            alignment: .leading,
-            views: [titleRowStackView, previewRowStackView]
-        )
+        // Explicit constraints rather than nested stack views, so every row
+        // shares one layout: the name and preview truncate, the timestamp and
+        // the unread badge hug a fixed trailing inset.
+        for label in [nameLabel, previewLabel] {
+            label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        }
+        for trailingView in [timestampLabel, unreadBadgeView] {
+            trailingView.setContentCompressionResistancePriority(.required, for: .horizontal)
+            trailingView.setContentHuggingPriority(.required, for: .horizontal)
+        }
 
-        let rowStackView = NSStackView(
-            orientation: .horizontal,
-            spacing: 10,
-            alignment: .top,
-            views: [avatarContainerView, textColumnStackView]
+        nameLeadingToAvatarConstraint = nameLabel.leadingAnchor.constraint(equalTo: avatarBadgeView.trailingAnchor, constant: 10)
+        nameLeadingToPinConstraint = nameLabel.leadingAnchor.constraint(equalTo: pinImageView.trailingAnchor, constant: 4)
+        previewTrailingToBadgeConstraint = previewLabel.trailingAnchor.constraint(
+            lessThanOrEqualTo: unreadBadgeView.leadingAnchor,
+            constant: -8
         )
-        addSubview(rowStackView)
-        rowStackView.pinEdges(to: self, insets: NSEdgeInsets(top: 8, left: 8, bottom: 8, right: 8))
 
         NSLayoutConstraint.activate([
-            avatarContainerView.widthAnchor.constraint(equalToConstant: 40),
-            avatarContainerView.heightAnchor.constraint(equalToConstant: 40),
-            avatarBadgeView.leadingAnchor.constraint(equalTo: avatarContainerView.leadingAnchor),
-            avatarBadgeView.topAnchor.constraint(equalTo: avatarContainerView.topAnchor),
-            onlineIndicatorView.trailingAnchor.constraint(equalTo: avatarContainerView.trailingAnchor),
-            onlineIndicatorView.bottomAnchor.constraint(equalTo: avatarContainerView.bottomAnchor),
-            titleRowStackView.widthAnchor.constraint(equalTo: textColumnStackView.widthAnchor),
-            previewRowStackView.widthAnchor.constraint(equalTo: textColumnStackView.widthAnchor),
+            avatarBadgeView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 6),
+            avatarBadgeView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            onlineIndicatorView.trailingAnchor.constraint(equalTo: avatarBadgeView.trailingAnchor, constant: 1),
+            onlineIndicatorView.bottomAnchor.constraint(equalTo: avatarBadgeView.bottomAnchor, constant: 1),
+
+            pinImageView.leadingAnchor.constraint(equalTo: avatarBadgeView.trailingAnchor, constant: 10),
+            pinImageView.centerYAnchor.constraint(equalTo: nameLabel.centerYAnchor),
+
+            nameLabel.bottomAnchor.constraint(equalTo: centerYAnchor, constant: -1),
+            nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: timestampLabel.leadingAnchor, constant: -8),
+
+            timestampLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+            timestampLabel.firstBaselineAnchor.constraint(equalTo: nameLabel.firstBaselineAnchor),
+
+            previewLabel.topAnchor.constraint(equalTo: centerYAnchor, constant: 2),
+            previewLabel.leadingAnchor.constraint(equalTo: avatarBadgeView.trailingAnchor, constant: 10),
+            previewLabel.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -10),
+
+            unreadBadgeView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+            unreadBadgeView.centerYAnchor.constraint(equalTo: previewLabel.centerYAnchor),
+            unreadBadgeView.heightAnchor.constraint(equalToConstant: 16),
+            unreadBadgeView.widthAnchor.constraint(greaterThanOrEqualToConstant: 16),
         ])
     }
 
@@ -104,11 +105,21 @@ final class ConversationTableCellView: NSTableCellView {
         avatarBadgeView.configure(initials: conversation.initials, tint: conversation.tint)
         onlineIndicatorView.isHidden = !conversation.isOnline
         pinImageView.isHidden = !conversation.isPinned
+        // Deactivate before activating so the two leading constraints never
+        // hold at the same time.
+        if conversation.isPinned {
+            nameLeadingToAvatarConstraint.isActive = false
+            nameLeadingToPinConstraint.isActive = true
+        } else {
+            nameLeadingToPinConstraint.isActive = false
+            nameLeadingToAvatarConstraint.isActive = true
+        }
         nameLabel.stringValue = conversation.name
         timestampLabel.stringValue = conversation.timestamp
         timestampLabel.textColor = conversation.unreadCount > 0 ? DemoPalette.accent : DemoPalette.secondaryLabel
         previewLabel.stringValue = conversation.lastMessage
         unreadCountLabel.stringValue = "\(conversation.unreadCount)"
         unreadBadgeView.isHidden = conversation.unreadCount == 0
+        previewTrailingToBadgeConstraint.isActive = conversation.unreadCount > 0
     }
 }

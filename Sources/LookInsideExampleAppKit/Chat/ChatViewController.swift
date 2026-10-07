@@ -10,18 +10,22 @@ final class ChatViewController: NSSplitViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let listItem = NSSplitViewItem(contentListWithViewController: conversationListViewController)
-        listItem.minimumThickness = 240
-        listItem.maximumThickness = 360
-        addSplitViewItem(listItem)
-
-        let detailItem = NSSplitViewItem(viewController: conversationDetailViewController)
-        detailItem.minimumThickness = 320
-        addSplitViewItem(detailItem)
-
+        // Wire the callback before the list loads: it selects the first
+        // conversation while loading, and that selection must reach the
+        // transcript.
         conversationListViewController.onSelectConversation = { [weak self] identifier in
             self?.conversationDetailViewController.show(conversationID: identifier)
         }
+
+        let listItem = NSSplitViewItem(contentListWithViewController: conversationListViewController)
+        listItem.minimumThickness = 260
+        listItem.maximumThickness = 380
+        listItem.holdingPriority = .defaultLow + 1
+        addSplitViewItem(listItem)
+
+        let detailItem = NSSplitViewItem(viewController: conversationDetailViewController)
+        detailItem.minimumThickness = 360
+        addSplitViewItem(detailItem)
     }
 }
 
@@ -38,7 +42,9 @@ final class ConversationListViewController: NSViewController {
     private let tableView = NSTableView()
     private var dataSource: NSTableViewDiffableDataSource<Section, Conversation.ID>!
 
-    var onSelectConversation: ((Conversation.ID) -> Void)?
+    /// Called with the selected conversation, or `nil` when the selection is
+    /// cleared.
+    var onSelectConversation: ((Conversation.ID?) -> Void)?
 
     init(store: ChatStore) {
         self.store = store
@@ -56,7 +62,7 @@ final class ConversationListViewController: NSViewController {
         view = containerView
 
         searchField.translatesAutoresizingMaskIntoConstraints = false
-        searchField.placeholderString = "Search messages"
+        searchField.placeholderString = "Search"
         searchField.delegate = self
 
         let column = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("ConversationColumn"))
@@ -64,8 +70,10 @@ final class ConversationListViewController: NSViewController {
         tableView.addTableColumn(column)
         tableView.headerView = nil
         tableView.style = .inset
-        tableView.usesAutomaticRowHeights = true
+        tableView.rowHeight = 60
+        tableView.intercellSpacing = NSSize(width: 0, height: 2)
         tableView.backgroundColor = .clear
+        tableView.columnAutoresizingStyle = .uniformColumnAutoresizingStyle
         tableView.delegate = self
         tableView.menu = makeContextualMenu()
 
@@ -73,14 +81,18 @@ final class ConversationListViewController: NSViewController {
         scrollView.documentView = tableView
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = false
+        scrollView.applyDemoScrollerStyle()
 
         containerView.addSubview(searchField)
         containerView.addSubview(scrollView)
 
+        // The window uses a full-size content view, so the search field hangs
+        // off the safe area rather than the top edge — otherwise it would sit
+        // under the toolbar and collide with the window title.
         NSLayoutConstraint.activate([
-            searchField.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 10),
-            searchField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 10),
-            searchField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -10),
+            searchField.topAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.topAnchor, constant: 8),
+            searchField.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            searchField.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
 
             scrollView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 8),
             scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
@@ -108,7 +120,7 @@ final class ConversationListViewController: NSViewController {
         }
 
         store.onChange = { [weak self] in
-            self?.applySnapshot(animated: true)
+            self?.applySnapshotPreservingSelection()
         }
         applySnapshot(animated: false)
 
@@ -132,6 +144,24 @@ final class ConversationListViewController: NSViewController {
         snapshot.appendSections([.main])
         snapshot.appendItems(store.sortedConversations(matching: searchField.stringValue).map(\.id))
         dataSource.apply(snapshot, animatingDifferences: animated)
+    }
+
+    /// Re-applies the snapshot and reconfigures the visible rows (the
+    /// diffable data source only re-renders rows whose identifiers moved),
+    /// then puts the selection back on the same conversation.
+    private func applySnapshotPreservingSelection() {
+        let selectedIdentifier = tableView.selectedRow >= 0 ? dataSource.itemIdentifier(forRow: tableView.selectedRow) : nil
+        applySnapshot(animated: true)
+        tableView.enumerateAvailableRowViews { rowView, row in
+            guard let identifier = self.dataSource.itemIdentifier(forRow: row),
+                  let conversation = self.store.conversation(with: identifier),
+                  let cellView = rowView.view(atColumn: 0) as? ConversationTableCellView
+            else { return }
+            cellView.configure(with: conversation)
+        }
+        if let selectedIdentifier, let row = dataSource.snapshot().indexOfItem(selectedIdentifier) {
+            tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        }
     }
 
     private func selectConversation(_ identifier: Conversation.ID) {
@@ -167,25 +197,39 @@ extension ConversationListViewController: NSSearchFieldDelegate {
 extension ConversationListViewController: NSTableViewDelegate {
     func tableViewSelectionDidChange(_: Notification) {
         let selectedRow = tableView.selectedRow
-        guard selectedRow >= 0, let identifier = dataSource.itemIdentifier(forRow: selectedRow) else { return }
-        store.markAsRead(identifier)
+        guard selectedRow >= 0, let identifier = dataSource.itemIdentifier(forRow: selectedRow) else {
+            onSelectConversation?(nil)
+            return
+        }
         onSelectConversation?(identifier)
+        store.markAsRead(identifier)
     }
 }
 
-/// The transcript: a scrolling stack of bubbles plus an input bar.
+/// The transcript: a header with the contact, a scrolling stack of bubbles,
+/// and an input bar. With no conversation selected, an empty state replaces
+/// all three.
 final class ConversationDetailViewController: NSViewController {
     private let store: ChatStore
+    private let contentView = NSView()
+    private let headerAvatarBadgeView = AvatarBadgeView(initials: "", tint: .blue, diameter: 30)
+    private let headerNameLabel = NSTextField.demoLabel(
+        font: .preferredFont(forTextStyle: .headline),
+        color: DemoPalette.primaryLabel
+    )
+    private let headerStatusLabel = NSTextField.demoLabel(
+        font: .preferredFont(forTextStyle: .caption1),
+        color: DemoPalette.secondaryLabel
+    )
     private let scrollView = NSScrollView()
     private let documentView = FlippedView()
     private let messageStackView = NSStackView(orientation: .vertical, spacing: 4, alignment: .leading)
     private let inputTextField = NSTextField()
     private let sendButton = NSButton()
-    private let placeholderLabel = NSTextField.demoLabel(
-        "Pick a conversation",
-        font: .preferredFont(forTextStyle: .title3),
-        color: DemoPalette.secondaryLabel,
-        alignment: .center
+    private let emptyStateView = EmptyStateView(
+        symbolName: "bubble.left.and.bubble.right",
+        title: "No Conversation Selected",
+        message: "Choose a conversation from the list."
     )
 
     private var conversationID: Conversation.ID?
@@ -205,51 +249,49 @@ final class ConversationDetailViewController: NSViewController {
         containerView.translatesAutoresizingMaskIntoConstraints = false
         view = containerView
 
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(contentView)
+        containerView.addSubview(emptyStateView)
+        contentView.pinEdges(to: containerView)
+
+        let headerView = makeHeaderView()
+        let headerHairlineView = HairlineView()
+
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = false
+        scrollView.applyDemoScrollerStyle()
         documentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.documentView = documentView
         documentView.addSubview(messageStackView)
 
-        let hairlineView = HairlineView()
+        let inputRowStackView = makeInputRow()
 
-        inputTextField.translatesAutoresizingMaskIntoConstraints = false
-        inputTextField.placeholderString = "Message"
-        inputTextField.font = .preferredFont(forTextStyle: .body)
-        inputTextField.bezelStyle = .roundedBezel
-        inputTextField.target = self
-        inputTextField.action = #selector(sendMessage)
-
-        sendButton.translatesAutoresizingMaskIntoConstraints = false
-        sendButton.image = NSImage.demoSymbol("arrow.up.circle.fill", pointSize: 18)
-        sendButton.imagePosition = .imageOnly
-        sendButton.isBordered = false
-        sendButton.bezelStyle = .shadowlessSquare
-        sendButton.contentTintColor = DemoPalette.accent
-        sendButton.target = self
-        sendButton.action = #selector(sendMessage)
-
-        let attachButton = NSButton.demoSymbolButton(symbolName: "plus.circle", pointSize: 16)
-
-        let inputRowStackView = NSStackView(
-            orientation: .horizontal,
-            spacing: 10,
-            alignment: .centerY,
-            views: [attachButton, inputTextField, sendButton]
-        )
-
-        containerView.addSubview(scrollView)
-        containerView.addSubview(hairlineView)
-        containerView.addSubview(inputRowStackView)
-        containerView.addSubview(placeholderLabel)
+        contentView.addSubview(headerView)
+        contentView.addSubview(headerHairlineView)
+        contentView.addSubview(scrollView)
+        contentView.addSubview(inputRowStackView)
 
         let clipView = scrollView.contentView
+        let readableWidthConstraint = messageStackView.widthAnchor.constraint(
+            equalTo: documentView.widthAnchor,
+            constant: -40
+        )
+        readableWidthConstraint.priority = .fillAvailableWidth
+
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: hairlineView.topAnchor),
+            headerView.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+
+            headerHairlineView.topAnchor.constraint(equalTo: headerView.bottomAnchor),
+            headerHairlineView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            headerHairlineView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+
+            scrollView.topAnchor.constraint(equalTo: headerHairlineView.bottomAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: inputRowStackView.topAnchor, constant: -8),
 
             documentView.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
             documentView.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
@@ -258,25 +300,95 @@ final class ConversationDetailViewController: NSViewController {
 
             messageStackView.topAnchor.constraint(equalTo: documentView.topAnchor, constant: 16),
             messageStackView.bottomAnchor.constraint(equalTo: documentView.bottomAnchor, constant: -16),
-            messageStackView.leadingAnchor.constraint(equalTo: documentView.leadingAnchor, constant: 16),
-            messageStackView.trailingAnchor.constraint(equalTo: documentView.trailingAnchor, constant: -16),
+            messageStackView.centerXAnchor.constraint(equalTo: documentView.centerXAnchor),
+            messageStackView.widthAnchor.constraint(lessThanOrEqualToConstant: DemoMetrics.chatContentMaximumWidth),
+            readableWidthConstraint,
 
-            hairlineView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            hairlineView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            hairlineView.bottomAnchor.constraint(equalTo: inputRowStackView.topAnchor, constant: -10),
+            inputRowStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            inputRowStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            inputRowStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -14),
 
-            inputRowStackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 14),
-            inputRowStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -14),
-            inputRowStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
-
-            placeholderLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            placeholderLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            emptyStateView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            emptyStateView.centerYAnchor.constraint(equalTo: containerView.safeAreaLayoutGuide.centerYAnchor),
+            emptyStateView.leadingAnchor.constraint(greaterThanOrEqualTo: containerView.leadingAnchor, constant: 24),
         ])
+
+        // The list may have picked a conversation before this view loaded.
+        reloadMessages()
     }
 
-    func show(conversationID identifier: Conversation.ID) {
+    private func makeHeaderView() -> NSView {
+        let textColumnStackView = NSStackView(
+            orientation: .vertical,
+            spacing: 1,
+            alignment: .leading,
+            views: [headerNameLabel, headerStatusLabel]
+        )
+        textColumnStackView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let actionButtons: [NSView] = [
+            ("video", "Video call"),
+            ("phone", "Voice call"),
+            ("info.circle", "Conversation details"),
+        ].map { symbolName, accessibilityLabel in
+            let button = NSButton.demoSymbolButton(symbolName: symbolName, pointSize: 14)
+            button.setAccessibilityLabel(accessibilityLabel)
+            button.toolTip = accessibilityLabel
+            return button
+        }
+
+        let headerStackView = NSStackView(
+            orientation: .horizontal,
+            spacing: 10,
+            alignment: .centerY,
+            views: [headerAvatarBadgeView, textColumnStackView, NSView.flexibleSpacer()] + actionButtons
+        )
+        headerStackView.setCustomSpacing(18, after: actionButtons[0])
+        headerStackView.setCustomSpacing(18, after: actionButtons[1])
+        headerStackView.edgeInsets = NSEdgeInsets(top: 10, left: 16, bottom: 10, right: 18)
+        return headerStackView
+    }
+
+    private func makeInputRow() -> NSStackView {
+        inputTextField.translatesAutoresizingMaskIntoConstraints = false
+        inputTextField.placeholderString = "Message"
+        inputTextField.font = .preferredFont(forTextStyle: .body)
+        inputTextField.bezelStyle = .roundedBezel
+        inputTextField.controlSize = .large
+        inputTextField.target = self
+        inputTextField.action = #selector(sendMessage)
+
+        sendButton.translatesAutoresizingMaskIntoConstraints = false
+        sendButton.image = NSImage.demoSymbol("arrow.up.circle.fill", pointSize: 22)
+        sendButton.imagePosition = .imageOnly
+        sendButton.isBordered = false
+        sendButton.bezelStyle = .shadowlessSquare
+        sendButton.contentTintColor = DemoPalette.accent
+        sendButton.target = self
+        sendButton.action = #selector(sendMessage)
+        sendButton.setAccessibilityLabel("Send")
+
+        let attachButton = NSButton.demoSymbolButton(symbolName: "plus.circle", pointSize: 18)
+        attachButton.setAccessibilityLabel("Add attachment")
+
+        return NSStackView(
+            orientation: .horizontal,
+            spacing: 10,
+            alignment: .centerY,
+            views: [attachButton, inputTextField, sendButton]
+        )
+    }
+
+    func show(conversationID identifier: Conversation.ID?) {
         conversationID = identifier
+        // Before the view loads, `loadView` renders the stored conversation.
+        guard isViewLoaded else { return }
         reloadMessages()
+    }
+
+    private func applyConversationVisibility(hasConversation: Bool) {
+        contentView.isHidden = !hasConversation
+        emptyStateView.isHidden = hasConversation
     }
 
     private func reloadMessages() {
@@ -286,10 +398,14 @@ final class ConversationDetailViewController: NSViewController {
         }
 
         guard let conversationID, let conversation = store.conversation(with: conversationID) else {
-            placeholderLabel.isHidden = false
+            applyConversationVisibility(hasConversation: false)
             return
         }
-        placeholderLabel.isHidden = true
+        applyConversationVisibility(hasConversation: true)
+
+        headerAvatarBadgeView.configure(initials: conversation.initials, tint: conversation.tint)
+        headerNameLabel.stringValue = conversation.name
+        headerStatusLabel.stringValue = conversation.isOnline ? "Active now" : "Away"
 
         for (messageIndex, message) in conversation.messages.enumerated() {
             let bubbleView = MessageBubbleView(

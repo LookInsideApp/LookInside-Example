@@ -6,20 +6,26 @@ final class MainWindowController: NSWindowController {
 
     init() {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 1080, height: 720),
+            contentRect: NSRect(x: 0, y: 0, width: 1100, height: 740),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
-        window.title = "LookInside AppKit"
+        // The title tracks the selected screen; the root split view controller
+        // keeps it in sync.
+        window.title = DemoDestination.welcome.title
         window.titlebarAppearsTransparent = false
-        window.contentMinSize = NSSize(width: 820, height: 520)
-        window.setFrameAutosaveName("LookInsideExampleAppKitMainWindow")
+        window.contentMinSize = NSSize(width: 860, height: 560)
 
         super.init(window: window)
 
+        // Assigning a content view controller resizes the window to the
+        // controller's fitting size, so the default size is applied after it,
+        // and a saved frame (if any) is restored last.
         window.contentViewController = rootSplitViewController
+        window.setContentSize(NSSize(width: 1100, height: 740))
         window.center()
+        window.setFrameAutosaveName("LookInsideExampleAppKitWindow")
 
         let toolbar = NSToolbar(identifier: "LookInsideExampleAppKitToolbar")
         toolbar.delegate = self
@@ -35,44 +41,23 @@ final class MainWindowController: NSWindowController {
     }
 }
 
-private extension NSToolbarItem.Identifier {
-    static let toggleSidebar = NSToolbarItem.Identifier("ToggleSidebar")
-    static let refreshLicenseState = NSToolbarItem.Identifier("RefreshLicenseState")
-}
-
 extension MainWindowController: NSToolbarDelegate {
     func toolbarDefaultItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace, .refreshLicenseState]
+        [.toggleSidebar, .sidebarTrackingSeparator, .flexibleSpace]
     }
 
     func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
         toolbarDefaultItemIdentifiers(toolbar)
     }
 
+    /// Every item is a system-provided one: the sidebar toggle, the separator
+    /// that keeps the title aligned with the detail pane, and a flexible
+    /// space. AppKit builds those itself.
     func toolbar(
         _: NSToolbar,
-        itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
+        itemForItemIdentifier _: NSToolbarItem.Identifier,
         willBeInsertedIntoToolbar _: Bool
     ) -> NSToolbarItem? {
-        switch itemIdentifier {
-        case .toggleSidebar:
-            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Sidebar"
-            item.image = NSImage(systemSymbolName: "sidebar.leading", accessibilityDescription: "Toggle Sidebar")
-            item.target = rootSplitViewController
-            item.action = #selector(NSSplitViewController.toggleSidebar(_:))
-            return item
-
-        case .refreshLicenseState:
-            let item = NSToolbarItem(itemIdentifier: itemIdentifier)
-            item.label = "Refresh"
-            item.image = NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: "Refresh licence state")
-            item.target = rootSplitViewController
-            item.action = #selector(RootSplitViewController.refreshLicenseState(_:))
-            return item
-
-        default:
-            return nil
-        }
+        nil
     }
 }

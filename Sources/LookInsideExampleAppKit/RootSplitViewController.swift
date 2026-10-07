@@ -2,29 +2,39 @@ import AppKit
 
 /// Which screen the detail pane is showing.
 enum DemoDestination: String, CaseIterable {
+    case welcome
     case music
     case feed
     case chat
     case controls
-    case status
 
     var title: String {
         switch self {
+        case .welcome: "Welcome"
         case .music: "Music"
         case .feed: "Feed"
         case .chat: "Chat"
         case .controls: "Controls"
-        case .status: "Status"
         }
     }
 
     var symbolName: String {
         switch self {
-        case .music: "play.circle"
-        case .feed: "square.text.square"
+        case .welcome: "hand.wave"
+        case .music: "music.note"
+        case .feed: "newspaper"
         case .chat: "bubble.left.and.bubble.right"
         case .controls: "slider.horizontal.3"
-        case .status: "info.circle"
+        }
+    }
+
+    var filledSymbolName: String {
+        switch self {
+        case .welcome: "hand.wave.fill"
+        case .music: "music.note"
+        case .feed: "newspaper.fill"
+        case .chat: "bubble.left.and.bubble.right.fill"
+        case .controls: "slider.horizontal.3"
         }
     }
 }
@@ -34,46 +44,53 @@ final class RootSplitViewController: NSSplitViewController {
     private let sidebarViewController = SidebarViewController()
     private let detailContainerViewController = DetailContainerViewController()
 
+    private lazy var welcomeViewController = WelcomeViewController()
     private lazy var musicPlayerViewController = MusicPlayerViewController()
     private lazy var socialFeedViewController = SocialFeedViewController()
     private lazy var chatViewController = ChatViewController()
     private lazy var controlsViewController = ControlsViewController()
-    private lazy var statusViewController = StatusViewController()
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
         let sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebarViewController)
-        sidebarItem.minimumThickness = 200
-        sidebarItem.maximumThickness = 280
+        sidebarItem.minimumThickness = 180
+        sidebarItem.maximumThickness = 240
+        sidebarItem.preferredThicknessFraction = 0.18
         sidebarItem.canCollapse = true
         addSplitViewItem(sidebarItem)
 
         let detailItem = NSSplitViewItem(viewController: detailContainerViewController)
-        detailItem.minimumThickness = 520
+        detailItem.minimumThickness = 560
         addSplitViewItem(detailItem)
 
         sidebarViewController.onSelectDestination = { [weak self] destination in
             self?.show(destination)
         }
-        show(.music)
+        welcomeViewController.onSelectDestination = { [weak self] destination in
+            self?.sidebarViewController.select(destination)
+        }
+        show(.welcome)
     }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        view.window?.title = currentDestination.title
+    }
+
+    private var currentDestination: DemoDestination = .welcome
 
     private func show(_ destination: DemoDestination) {
         let destinationViewController: NSViewController = switch destination {
+        case .welcome: welcomeViewController
         case .music: musicPlayerViewController
         case .feed: socialFeedViewController
         case .chat: chatViewController
         case .controls: controlsViewController
-        case .status: statusViewController
         }
         detailContainerViewController.show(destinationViewController)
-        view.window?.subtitle = destination.title
-    }
-
-    @objc
-    func refreshLicenseState(_: Any?) {
-        statusViewController.refreshLicenseState()
+        currentDestination = destination
+        view.window?.title = destination.title
     }
 }
 
