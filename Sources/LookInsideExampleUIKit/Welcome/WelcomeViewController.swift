@@ -70,10 +70,10 @@ final class WelcomeViewController: UIViewController {
             header: "Demos",
             footer: nil,
             rows: [
-                .demo(.music, symbolName: "music.note", tint: .systemPink, title: "Music", subtitle: "Scroll and stack views with Core Animation layers"),
-                .demo(.feed, symbolName: "newspaper.fill", tint: .systemOrange, title: "Feed", subtitle: "A compositional collection view layout"),
+                .demo(.music, symbolName: "music.note", tint: .systemPink, title: "Music", subtitle: "Scroll views, stacks, and layers"),
+                .demo(.feed, symbolName: "newspaper.fill", tint: .systemOrange, title: "Feed", subtitle: "A compositional collection view"),
                 .demo(.chat, symbolName: "bubble.left.and.bubble.right.fill", tint: .systemGreen, title: "Chat", subtitle: "A split view with a searchable list"),
-                .demo(.controls, symbolName: "slider.horizontal.3", tint: .systemGray, title: "Controls", subtitle: "Every standard UIKit control in one place"),
+                .demo(.controls, symbolName: "slider.horizontal.3", tint: .systemGray, title: "Controls", subtitle: "Every standard UIKit control"),
             ]
         ),
     ]
@@ -216,6 +216,7 @@ extension WelcomeViewController: UITableViewDataSource {
         contentConfiguration.image = .symbolTile(symbolName, tint: tint)
         contentConfiguration.text = title
         contentConfiguration.secondaryText = subtitle
+        contentConfiguration.secondaryTextProperties.font = .preferredFont(forTextStyle: .footnote)
         contentConfiguration.secondaryTextProperties.color = DemoPalette.secondaryLabel
         contentConfiguration.textToSecondaryTextVerticalPadding = 2
         contentConfiguration.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 10, leading: 0, bottom: 10, trailing: 0)

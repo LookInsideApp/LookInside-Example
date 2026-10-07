@@ -118,6 +118,7 @@ final class FormRowView: NSView {
         rowViews.append(NSView.flexibleSpacer())
 
         if let accessory {
+            accessory.translatesAutoresizingMaskIntoConstraints = false
             accessory.setContentCompressionResistancePriority(.required, for: .horizontal)
             rowViews.append(accessory)
         }
@@ -161,6 +162,7 @@ final class FormContentRowView: NSView {
     init(contentView: NSView) {
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
+        contentView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(contentView)
         contentView.pinEdges(to: self, insets: NSEdgeInsets(top: 10, left: 12, bottom: 10, right: 12))
     }

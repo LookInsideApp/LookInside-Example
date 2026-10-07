@@ -177,7 +177,7 @@ final class WelcomeViewController: NSViewController {
             (.music, "Stack views, sliders, and Core Animation layers", .systemPink),
             (.feed, "A view-based table with automatic row heights", .systemOrange),
             (.chat, "A nested split view with a searchable list", .systemGreen),
-            (.controls, "Every standard AppKit control in one place", .systemGray),
+            (.controls, "Every standard AppKit control", .systemGray),
         ]
         return FormSectionView(title: "Demos", rows: demoRows.map { demoRow in
             FormRowView(
