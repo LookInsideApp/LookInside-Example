@@ -1,6 +1,6 @@
 import AppKit
 
-/// A 168-point tile in the horizontally scrolling "Made for you" strip.
+/// A 168-point tile in the horizontally scrolling "Made for You" strip.
 final class PlaylistCardView: NSView {
     private let artworkView = GradientView(cornerRadius: 14)
     private let symbolImageView = NSImageView()

@@ -263,13 +263,15 @@ final class ControlsViewController: NSViewController {
         gradientView.setColors([.systemIndigo, .systemTeal])
         gradientView.heightAnchor.constraint(equalToConstant: 72).isActive = true
 
-        let symbolNames = ["cloud.sun.rain.fill", "thermometer.sun.fill", "wind", "moon.stars.fill"]
+        let symbolNames = ["sun.max.fill", "thermometer.sun.fill", "flame.fill", "leaf.fill"]
         let symbolImageViews: [NSView] = symbolNames.map { symbolName in
             let imageView = NSImageView()
             imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.image = NSImage.demoSymbol(symbolName, pointSize: 22)
             imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 22, weight: .regular)
                 .applying(.preferringMulticolor())
+            // Tints the layers a symbol leaves uncoloured in multicolor mode.
+            imageView.contentTintColor = .systemIndigo
             return imageView
         }
         let symbolRowStackView = NSStackView(
