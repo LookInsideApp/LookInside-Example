@@ -4,18 +4,25 @@ final class RootTabBarController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        let welcomeNavigationController = UINavigationController(rootViewController: WelcomeViewController())
+        welcomeNavigationController.tabBarItem = UITabBarItem(
+            title: "Welcome",
+            image: UIImage(systemName: "hand.wave"),
+            selectedImage: UIImage(systemName: "hand.wave.fill")
+        )
+
         let musicNavigationController = UINavigationController(rootViewController: MusicPlayerViewController())
         musicNavigationController.tabBarItem = UITabBarItem(
             title: "Music",
-            image: UIImage(systemName: "play.circle"),
-            selectedImage: UIImage(systemName: "play.circle.fill")
+            image: UIImage(systemName: "music.note"),
+            selectedImage: UIImage(systemName: "music.note")
         )
 
         let feedNavigationController = UINavigationController(rootViewController: SocialFeedViewController())
         feedNavigationController.tabBarItem = UITabBarItem(
             title: "Feed",
-            image: UIImage(systemName: "square.text.square"),
-            selectedImage: UIImage(systemName: "square.text.square.fill")
+            image: UIImage(systemName: "newspaper"),
+            selectedImage: UIImage(systemName: "newspaper.fill")
         )
 
         let chatSplitViewController = ChatSplitViewController()
@@ -32,19 +39,13 @@ final class RootTabBarController: UITabBarController {
             selectedImage: UIImage(systemName: "slider.horizontal.3")
         )
 
-        let statusNavigationController = UINavigationController(rootViewController: StatusViewController())
-        statusNavigationController.tabBarItem = UITabBarItem(
-            title: "Status",
-            image: UIImage(systemName: "info.circle"),
-            selectedImage: UIImage(systemName: "info.circle.fill")
-        )
-
+        // Order matches `WelcomeViewController.DemoTab`.
         viewControllers = [
+            welcomeNavigationController,
             musicNavigationController,
             feedNavigationController,
             chatSplitViewController,
             controlsNavigationController,
-            statusNavigationController,
         ]
 
         for navigationController in viewControllers ?? [] {

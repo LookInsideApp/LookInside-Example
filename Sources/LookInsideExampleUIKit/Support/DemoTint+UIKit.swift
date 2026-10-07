@@ -47,6 +47,7 @@ enum DemoPalette {
 
 enum DemoMetrics {
     static let cardCornerRadius: CGFloat = 18
+    static let formCornerRadius: CGFloat = 22
     static let bubbleCornerRadius: CGFloat = 18
     static let contentMaximumWidth: CGFloat = 640
     static let chatContentMaximumWidth: CGFloat = 820

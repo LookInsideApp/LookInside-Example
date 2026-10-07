@@ -10,7 +10,7 @@ final class ComposerCell: UICollectionViewCell {
     private let cardView = CardView()
     private let avatarBadgeView = AvatarBadgeView(initials: "Y", tint: .blue, diameter: 38)
     private let textView = UITextView()
-    private let placeholderLabel = UILabel(text: "Share something with your friends...", font: .preferredFont(forTextStyle: .body), color: DemoPalette.tertiaryLabel, numberOfLines: 2)
+    private let placeholderLabel = UILabel(text: "What’s on your mind?", font: .preferredFont(forTextStyle: .body), color: DemoPalette.tertiaryLabel, numberOfLines: 2)
     private let actionRowStackView = UIStackView(axis: .horizontal, spacing: 14, alignment: .center)
     private let postButton = UIButton(type: .system)
 

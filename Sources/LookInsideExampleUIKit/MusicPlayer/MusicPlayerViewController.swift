@@ -44,7 +44,9 @@ final class MusicPlayerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Listening"
+        // The navigation item only: setting `title` would also rename the
+        // tab, which reads "Music".
+        navigationItem.title = "Now Playing"
         view.backgroundColor = DemoPalette.groupedBackground
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "list.bullet"),
@@ -229,7 +231,7 @@ final class MusicPlayerViewController: UIViewController {
     private func makeUpNextSection() -> UIView {
         let headerLabel = UILabel(text: "Up Next", font: .preferredFont(forTextStyle: .headline), color: DemoPalette.primaryLabel)
         let seeQueueButton = UIButton(type: .system)
-        seeQueueButton.setTitle("See queue", for: .normal)
+        seeQueueButton.setTitle("See All", for: .normal)
         seeQueueButton.titleLabel?.font = .preferredFont(forTextStyle: .subheadline)
         seeQueueButton.addTarget(self, action: #selector(presentQueue), for: .touchUpInside)
 
@@ -246,7 +248,7 @@ final class MusicPlayerViewController: UIViewController {
     }
 
     private func makePlaylistSection() -> UIView {
-        let headerLabel = UILabel(text: "Made for you", font: .preferredFont(forTextStyle: .headline), color: DemoPalette.primaryLabel)
+        let headerLabel = UILabel(text: "Made for You", font: .preferredFont(forTextStyle: .headline), color: DemoPalette.primaryLabel)
 
         let horizontalScrollView = UIScrollView()
         horizontalScrollView.translatesAutoresizingMaskIntoConstraints = false

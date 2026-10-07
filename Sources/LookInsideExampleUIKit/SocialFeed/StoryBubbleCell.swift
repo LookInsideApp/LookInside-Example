@@ -80,6 +80,7 @@ final class StoryBubbleCell: UICollectionViewCell {
 /// The dashed "Your story" bubble that opens the (non-functional) composer.
 final class AddStoryCell: UICollectionViewCell {
     static let reuseIdentifier = "AddStoryCell"
+    private static let circleDiameter: CGFloat = 64
 
     private let dashedBorderLayer = CAShapeLayer()
     private let circleView = UIView()
@@ -114,8 +115,8 @@ final class AddStoryCell: UICollectionViewCell {
         columnStackView.pinEdges(to: contentView)
 
         NSLayoutConstraint.activate([
-            circleView.widthAnchor.constraint(equalToConstant: 64),
-            circleView.heightAnchor.constraint(equalToConstant: 64),
+            circleView.widthAnchor.constraint(equalToConstant: Self.circleDiameter),
+            circleView.heightAnchor.constraint(equalToConstant: Self.circleDiameter),
             plusImageView.centerXAnchor.constraint(equalTo: circleView.centerXAnchor),
             plusImageView.centerYAnchor.constraint(equalTo: circleView.centerYAnchor),
         ])
@@ -126,10 +127,14 @@ final class AddStoryCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
+    /// The circle has a fixed size, so its shape is set from that size: the
+    /// cell's `layoutSubviews` runs before the stack view has given the
+    /// circle its bounds.
     override func layoutSubviews() {
         super.layoutSubviews()
-        circleView.layer.cornerRadius = circleView.bounds.height / 2
-        dashedBorderLayer.frame = circleView.bounds
-        dashedBorderLayer.path = UIBezierPath(ovalIn: circleView.bounds.insetBy(dx: 1, dy: 1)).cgPath
+        let circleBounds = CGRect(x: 0, y: 0, width: Self.circleDiameter, height: Self.circleDiameter)
+        circleView.layer.cornerRadius = Self.circleDiameter / 2
+        dashedBorderLayer.frame = circleBounds
+        dashedBorderLayer.path = UIBezierPath(ovalIn: circleBounds.insetBy(dx: 1, dy: 1)).cgPath
     }
 }
