@@ -2,7 +2,7 @@
 
 Ready-to-run demo apps for trying LookInside on iOS and macOS.
 
-Three apps live here, and they all show the same three screens — Music, Feed, and Chat — built three different ways. Run one, open LookInside on your Mac, and inspect the live UI. Because the screens match, you can load the SwiftUI app and the native app side by side and compare exactly what each hierarchy looks like in the inspector.
+Three apps live here. Each opens on a Welcome screen with the setup steps and the live license state, then shows the same three demos — Music, Feed, and Chat — built three different ways. Run one, open LookInside on your Mac, and inspect the live UI. Because the screens match, you can load the SwiftUI app and the native app side by side and compare exactly what each hierarchy looks like in the inspector.
 
 The two native apps additionally ship a Controls screen: a gallery of the stock UIKit / AppKit controls — buttons, text inputs, sliders, steppers, progress indicators, pickers, and a card drawn by a bare `CALayer` sublayer — so there is a rich, varied hierarchy to point the inspector at.
 
@@ -36,6 +36,8 @@ make run-appkit
 ```
 
 You can also open `LookInsideExample.xcodeproj` in Xcode, pick a scheme, and press Run.
+
+LookInside finds a running app on its own: over TCP loopback in the Simulator and on this Mac (ports 47164–47169), or over USB on a connected device (ports 47175–47179).
 
 ## Build only
 
