@@ -56,6 +56,22 @@ struct AvatarBadge: View {
     }
 }
 
+/// A rounded, filled square holding a white SF Symbol — the icon tile
+/// Settings shows beside each row.
+struct SymbolTile: View {
+    let symbolName: String
+    let tint: Color
+    var side: CGFloat = 30
+
+    var body: some View {
+        Image(systemName: symbolName)
+            .font(.system(size: side * 0.48, weight: .semibold))
+            .foregroundStyle(.white)
+            .frame(width: side, height: side)
+            .background(tint.gradient, in: RoundedRectangle(cornerRadius: side * 0.26, style: .continuous))
+    }
+}
+
 extension Color {
     static func deterministicTint(for seed: String) -> Color {
         let palette: [Color] = [
@@ -77,6 +93,28 @@ extension View {
     func demoContentWidth(_ maxWidth: CGFloat = DemoTheme.contentMaxWidth) -> some View {
         frame(maxWidth: maxWidth)
             .frame(maxWidth: .infinity)
+    }
+
+    /// A small inline title on iPhone, where the large title would push the
+    /// welcome header below the fold.
+    @ViewBuilder
+    func demoInlineNavigationTitle() -> some View {
+        #if os(iOS)
+            navigationBarTitleDisplayMode(.inline)
+        #else
+            self
+        #endif
+    }
+
+    /// Liquid Glass in a capsule on iOS 26 and later; a filled capsule
+    /// before that.
+    @ViewBuilder
+    func demoGlassCapsule() -> some View {
+        if #available(iOS 26.0, macOS 26.0, macCatalyst 26.0, *) {
+            glassEffect(.regular.interactive(), in: Capsule())
+        } else {
+            background(Capsule().fill(DemoTheme.secondaryGroupedBackground))
+        }
     }
 
     @ViewBuilder

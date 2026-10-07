@@ -25,7 +25,7 @@ struct MusicPlayerView: View {
                 .demoContentWidth(640)
             }
             .background(DemoTheme.groupedBackground)
-            .navigationTitle("Listening")
+            .navigationTitle("Now Playing")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -161,7 +161,7 @@ struct MusicPlayerView: View {
                 Text("Up Next")
                     .font(.headline)
                 Spacer()
-                Button("See queue") { showQueue = true }
+                Button("See All") { showQueue = true }
                     .font(.subheadline)
             }
 
@@ -182,7 +182,7 @@ struct MusicPlayerView: View {
 
     private var playlistSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Made for you")
+            Text("Made for You")
                 .font(.headline)
 
             ScrollView(.horizontal, showsIndicators: false) {
