@@ -22,8 +22,11 @@ struct SocialPost: Identifiable, Hashable {
     let tags: [String]
     var isVerified: Bool = false
 
+    /// "Naomi Park" becomes "NP"; a single name keeps its first two letters.
     var initials: String {
-        String(author.prefix(2)).uppercased()
+        let words = author.split(separator: " ")
+        guard words.count > 1 else { return String(author.prefix(2)).uppercased() }
+        return words.prefix(2).compactMap(\.first).map(String.init).joined().uppercased()
     }
 
     static let samples: [SocialPost] = [
