@@ -1,6 +1,6 @@
 import AppKit
 
-/// A gallery of the stock AppKit controls, grouped into cards. Every control
+/// A gallery of the stock AppKit controls, grouped into form sections. Every control
 /// here exists to give the inspector an interesting hierarchy to walk: the
 /// cell-based controls (buttons, sliders, steppers), field editors and token
 /// fields, determinate and indeterminate progress, pickers, and a card whose
@@ -26,96 +26,31 @@ final class ControlsViewController: NSViewController {
         containerView.translatesAutoresizingMaskIntoConstraints = false
         view = containerView
 
-        let scrollView = NSScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.hasVerticalScroller = true
-        scrollView.drawsBackground = false
-
-        let documentView = FlippedView()
-        documentView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.documentView = documentView
-
         let columnStackView = NSStackView(
             orientation: .vertical,
-            spacing: 20,
+            spacing: 24,
             alignment: .leading,
             views: [
-                makeButtonsCard(),
-                makeTextInputCard(),
-                makeTogglesAndSlidersCard(),
-                makeProgressCard(),
-                makePickersCard(),
-                makeLayersCard(),
+                makeButtonsSection(),
+                makeTextInputSection(),
+                makeTogglesAndSlidersSection(),
+                makeProgressSection(),
+                makePickersSection(),
+                makeLayersSection(),
             ]
         )
-        for card in columnStackView.arrangedSubviews {
-            card.widthAnchor.constraint(equalTo: columnStackView.widthAnchor).isActive = true
+        for sectionView in columnStackView.arrangedSubviews {
+            sectionView.widthAnchor.constraint(equalTo: columnStackView.widthAnchor).isActive = true
         }
-        documentView.addSubview(columnStackView)
-        containerView.addSubview(scrollView)
-        scrollView.pinEdges(to: containerView)
-
-        let clipView = scrollView.contentView
-        let preferredWidthConstraint = columnStackView.widthAnchor.constraint(
-            equalTo: documentView.widthAnchor,
-            constant: -48
-        )
-        preferredWidthConstraint.priority = .defaultHigh
-
-        NSLayoutConstraint.activate([
-            documentView.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
-            documentView.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
-            documentView.topAnchor.constraint(equalTo: clipView.topAnchor),
-            documentView.widthAnchor.constraint(equalTo: clipView.widthAnchor),
-
-            columnStackView.topAnchor.constraint(equalTo: documentView.topAnchor, constant: 24),
-            columnStackView.bottomAnchor.constraint(equalTo: documentView.bottomAnchor, constant: -24),
-            columnStackView.centerXAnchor.constraint(equalTo: documentView.centerXAnchor),
-            columnStackView.leadingAnchor.constraint(greaterThanOrEqualTo: documentView.leadingAnchor, constant: 24),
-            columnStackView.widthAnchor.constraint(lessThanOrEqualToConstant: DemoMetrics.contentMaximumWidth),
-            preferredWidthConstraint,
-        ])
+        NSScrollView.installCenteredColumn(columnStackView, in: containerView)
     }
 
-    // MARK: - Cards
+    // MARK: - Sections
 
-    private func makeCard(title: String, contentViews: [NSView]) -> NSView {
-        let card = CardBoxView()
-        let titleLabel = NSTextField.demoLabel(
-            title,
-            font: .systemFont(ofSize: 11, weight: .semibold),
-            color: DemoPalette.secondaryLabel
-        )
-        let stackView = NSStackView(
-            orientation: .vertical,
-            spacing: 12,
-            alignment: .leading,
-            views: [titleLabel] + contentViews
-        )
-        stackView.setCustomSpacing(10, after: titleLabel)
-        card.addSubview(stackView)
-        stackView.pinEdges(to: card, insets: NSEdgeInsets(top: 12, left: 16, bottom: 16, right: 16))
-        return card
-    }
-
-    private func makeRow(caption: String, control: NSView) -> NSView {
-        let captionLabel = NSTextField.demoLabel(
-            caption,
-            font: .preferredFont(forTextStyle: .body),
-            color: DemoPalette.primaryLabel
-        )
-        return NSStackView(
-            orientation: .horizontal,
-            spacing: 12,
-            alignment: .centerY,
-            views: [captionLabel, control]
-        )
-    }
-
-    private func makeButtonsCard() -> NSView {
+    private func makeButtonsSection() -> NSView {
         let pushButton = NSButton(title: "Play", target: nil, action: nil)
         pushButton.translatesAutoresizingMaskIntoConstraints = false
-        pushButton.bezelStyle = .rounded
+        pushButton.bezelStyle = .push
         pushButton.keyEquivalent = "\r"
 
         let imageButton = NSButton(
@@ -125,46 +60,27 @@ final class ControlsViewController: NSViewController {
             action: nil
         )
         imageButton.translatesAutoresizingMaskIntoConstraints = false
-        imageButton.bezelStyle = .rounded
+        imageButton.bezelStyle = .push
         imageButton.imagePosition = .imageLeading
 
         let popUpButton = NSPopUpButton()
         popUpButton.translatesAutoresizingMaskIntoConstraints = false
-        popUpButton.addItems(withTitles: ["Name", "Date added", "Play count"])
-
-        let buttonRow = NSStackView(
-            orientation: .horizontal,
-            spacing: 10,
-            alignment: .centerY,
-            views: [pushButton, imageButton, popUpButton, NSView.flexibleSpacer()]
-        )
+        popUpButton.addItems(withTitles: ["Name", "Date Added", "Play Count"])
 
         let firstCheckbox = NSButton(checkboxWithTitle: "Shuffle", target: nil, action: nil)
         firstCheckbox.translatesAutoresizingMaskIntoConstraints = false
         firstCheckbox.state = .on
         let secondCheckbox = NSButton(checkboxWithTitle: "Repeat", target: nil, action: nil)
         secondCheckbox.translatesAutoresizingMaskIntoConstraints = false
-        let checkboxRow = NSStackView(
-            orientation: .horizontal,
-            spacing: 16,
-            alignment: .centerY,
-            views: [firstCheckbox, secondCheckbox, NSView.flexibleSpacer()]
-        )
 
         // Radio buttons group by sharing a target/action pair.
         let radioTitles = ["Small", "Medium", "Large"]
-        let radioButtons: [NSButton] = radioTitles.enumerated().map { index, title in
+        let radioButtons: [NSView] = radioTitles.enumerated().map { index, title in
             let radioButton = NSButton(radioButtonWithTitle: title, target: self, action: #selector(radioButtonDidChange))
             radioButton.translatesAutoresizingMaskIntoConstraints = false
             radioButton.state = index == 1 ? .on : .off
             return radioButton
         }
-        let radioRow = NSStackView(
-            orientation: .horizontal,
-            spacing: 16,
-            alignment: .centerY,
-            views: radioButtons + [NSView.flexibleSpacer()]
-        )
 
         let segmentedControl = NSSegmentedControl(
             labels: ["Day", "Week", "Month", "Year"],
@@ -175,17 +91,23 @@ final class ControlsViewController: NSViewController {
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
         segmentedControl.selectedSegment = 1
 
-        return makeCard(title: "BUTTONS", contentViews: [buttonRow, checkboxRow, radioRow, segmentedControl])
+        return FormSectionView(title: "Buttons", rows: [
+            FormRowView(title: "Push buttons", accessory: NSStackView.controlRow([imageButton, pushButton])),
+            FormRowView(title: "Sort by", accessory: popUpButton),
+            FormRowView(title: "Playback", accessory: NSStackView.controlRow([firstCheckbox, secondCheckbox], spacing: 16)),
+            FormRowView(title: "Text size", accessory: NSStackView.controlRow(radioButtons, spacing: 14)),
+            FormRowView(title: "Range", accessory: segmentedControl),
+        ])
     }
 
-    private func makeTextInputCard() -> NSView {
+    private func makeTextInputSection() -> NSView {
         let textField = NSTextField()
         textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.placeholderString = "Name"
+        textField.placeholderString = "Full name"
 
         let secureTextField = NSSecureTextField()
         secureTextField.translatesAutoresizingMaskIntoConstraints = false
-        secureTextField.placeholderString = "Password"
+        secureTextField.placeholderString = "Required"
 
         let searchField = NSSearchField()
         searchField.translatesAutoresizingMaskIntoConstraints = false
@@ -193,37 +115,47 @@ final class ControlsViewController: NSViewController {
 
         let comboBox = NSComboBox()
         comboBox.translatesAutoresizingMaskIntoConstraints = false
-        comboBox.addItems(withObjectValues: ["Lossless", "High", "Standard", "Data saver"])
-        comboBox.placeholderString = "Quality"
+        comboBox.addItems(withObjectValues: ["Lossless", "High", "Standard", "Data Saver"])
+        comboBox.stringValue = "High"
 
         let tokenField = NSTokenField()
         tokenField.translatesAutoresizingMaskIntoConstraints = false
         tokenField.objectValue = ["design", "debug", "layers"]
 
+        for trailingField in [textField, secureTextField, searchField, comboBox] {
+            trailingField.widthAnchor.constraint(equalToConstant: 240).isActive = true
+        }
+        tokenField.widthAnchor.constraint(equalToConstant: 280).isActive = true
+
         let scrollableTextView = NSTextView.scrollableTextView()
         scrollableTextView.translatesAutoresizingMaskIntoConstraints = false
-        scrollableTextView.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        scrollableTextView.heightAnchor.constraint(equalToConstant: 56).isActive = true
+        scrollableTextView.drawsBackground = false
+        scrollableTextView.applyDemoScrollerStyle()
         if let textView = scrollableTextView.documentView as? NSTextView {
             textView.font = .preferredFont(forTextStyle: .body)
             textView.textColor = DemoPalette.primaryLabel
             textView.drawsBackground = false
-            textView.string = "An NSTextView with a couple of lines of content, so the layout manager's text fragments have something to show in the inspector."
-        }
-        scrollableTextView.drawsBackground = false
-
-        for fullWidthField in [textField, secureTextField, searchField, comboBox, tokenField] {
-            fullWidthField.widthAnchor.constraint(greaterThanOrEqualToConstant: 260).isActive = true
+            textView.textContainerInset = .zero
+            textView.textContainer?.lineFragmentPadding = 0
+            textView.string = "Notes live in an NSTextView, so the inspector can show its text container and layout fragments."
         }
 
-        return makeCard(title: "TEXT INPUT", contentViews: [
-            textField, secureTextField, searchField, comboBox, tokenField, scrollableTextView,
+        return FormSectionView(title: "Text Input", rows: [
+            FormRowView(title: "Name", accessory: textField),
+            FormRowView(title: "Password", accessory: secureTextField),
+            FormRowView(title: "Search", accessory: searchField),
+            FormRowView(title: "Quality", accessory: comboBox),
+            FormRowView(title: "Tags", accessory: tokenField),
+            FormContentRowView(contentView: scrollableTextView),
         ])
     }
 
-    private func makeTogglesAndSlidersCard() -> NSView {
+    private func makeTogglesAndSlidersSection() -> NSView {
         let switchControl = NSSwitch()
         switchControl.translatesAutoresizingMaskIntoConstraints = false
         switchControl.state = .on
+        switchControl.controlSize = .small
 
         slider.translatesAutoresizingMaskIntoConstraints = false
         slider.minValue = 0
@@ -231,14 +163,8 @@ final class ControlsViewController: NSViewController {
         slider.doubleValue = 0.4
         slider.target = self
         slider.action = #selector(sliderValueDidChange)
-        slider.widthAnchor.constraint(greaterThanOrEqualToConstant: 220).isActive = true
-        sliderValueLabel.widthAnchor.constraint(equalToConstant: 40).isActive = true
-        let sliderRow = NSStackView(
-            orientation: .horizontal,
-            spacing: 12,
-            alignment: .centerY,
-            views: [slider, sliderValueLabel]
-        )
+        slider.widthAnchor.constraint(equalToConstant: 196).isActive = true
+        sliderValueLabel.widthAnchor.constraint(equalToConstant: 36).isActive = true
 
         let tickMarkSlider = NSSlider()
         tickMarkSlider.translatesAutoresizingMaskIntoConstraints = false
@@ -247,7 +173,7 @@ final class ControlsViewController: NSViewController {
         tickMarkSlider.doubleValue = 6
         tickMarkSlider.numberOfTickMarks = 11
         tickMarkSlider.allowsTickMarkValuesOnly = true
-        tickMarkSlider.widthAnchor.constraint(greaterThanOrEqualToConstant: 220).isActive = true
+        tickMarkSlider.widthAnchor.constraint(equalToConstant: 240).isActive = true
 
         let circularSlider = NSSlider()
         circularSlider.translatesAutoresizingMaskIntoConstraints = false
@@ -262,12 +188,6 @@ final class ControlsViewController: NSViewController {
         stepper.integerValue = 5
         stepper.target = self
         stepper.action = #selector(stepperValueDidChange)
-        let stepperControlRow = NSStackView(
-            orientation: .horizontal,
-            spacing: 8,
-            alignment: .centerY,
-            views: [stepperValueField, stepper]
-        )
 
         let ratingIndicator = NSLevelIndicator()
         ratingIndicator.translatesAutoresizingMaskIntoConstraints = false
@@ -277,24 +197,24 @@ final class ControlsViewController: NSViewController {
         ratingIndicator.doubleValue = 3
         ratingIndicator.isEditable = true
 
-        return makeCard(title: "TOGGLES & SLIDERS", contentViews: [
-            makeRow(caption: "Notifications", control: switchControl),
-            sliderRow,
-            tickMarkSlider,
-            makeRow(caption: "Rotation", control: circularSlider),
-            makeRow(caption: "Copies", control: stepperControlRow),
-            makeRow(caption: "Rating", control: ratingIndicator),
+        return FormSectionView(title: "Toggles and Sliders", rows: [
+            FormRowView(title: "Notifications", accessory: switchControl),
+            FormRowView(title: "Volume", accessory: NSStackView.controlRow([slider, sliderValueLabel])),
+            FormRowView(title: "Steps", accessory: tickMarkSlider),
+            FormRowView(title: "Rotation", accessory: circularSlider),
+            FormRowView(title: "Copies", accessory: NSStackView.controlRow([stepperValueField, stepper], spacing: 6)),
+            FormRowView(title: "Rating", accessory: ratingIndicator),
         ])
     }
 
-    private func makeProgressCard() -> NSView {
+    private func makeProgressSection() -> NSView {
         let determinateProgressIndicator = NSProgressIndicator()
         determinateProgressIndicator.translatesAutoresizingMaskIntoConstraints = false
         determinateProgressIndicator.isIndeterminate = false
         determinateProgressIndicator.minValue = 0
         determinateProgressIndicator.maxValue = 1
         determinateProgressIndicator.doubleValue = 0.65
-        determinateProgressIndicator.widthAnchor.constraint(greaterThanOrEqualToConstant: 260).isActive = true
+        determinateProgressIndicator.widthAnchor.constraint(equalToConstant: 240).isActive = true
 
         let spinningProgressIndicator = NSProgressIndicator()
         spinningProgressIndicator.translatesAutoresizingMaskIntoConstraints = false
@@ -302,13 +222,13 @@ final class ControlsViewController: NSViewController {
         spinningProgressIndicator.controlSize = .small
         spinningProgressIndicator.startAnimation(nil)
 
-        return makeCard(title: "PROGRESS", contentViews: [
-            determinateProgressIndicator,
-            makeRow(caption: "Syncing…", control: spinningProgressIndicator),
+        return FormSectionView(title: "Progress", rows: [
+            FormRowView(title: "Download", accessory: determinateProgressIndicator),
+            FormRowView(title: "Syncing", accessory: spinningProgressIndicator),
         ])
     }
 
-    private func makePickersCard() -> NSView {
+    private func makePickersSection() -> NSView {
         let datePicker = NSDatePicker()
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.datePickerStyle = .textFieldAndStepper
@@ -327,38 +247,43 @@ final class ControlsViewController: NSViewController {
         pathControl.translatesAutoresizingMaskIntoConstraints = false
         pathControl.url = URL(fileURLWithPath: "/Applications/Utilities")
         pathControl.pathStyle = .standard
+        pathControl.backgroundColor = .clear
 
-        return makeCard(title: "PICKERS", contentViews: [
-            makeRow(caption: "Reminder", control: datePicker),
-            makeRow(caption: "Accent color", control: colorWell),
-            pathControl,
+        return FormSectionView(title: "Pickers", rows: [
+            FormRowView(title: "Reminder", accessory: datePicker),
+            FormRowView(title: "Accent color", accessory: colorWell),
+            FormRowView(title: "Location", accessory: pathControl),
         ])
     }
 
-    private func makeLayersCard() -> NSView {
+    private func makeLayersSection() -> NSView {
         // The gradient is a bare CALayer sublayer with no view of its own —
         // an orphan layer in the inspector's hierarchy.
-        let gradientView = GradientView(cornerRadius: 12)
+        let gradientView = GradientView(cornerRadius: 10)
         gradientView.setColors([.systemIndigo, .systemTeal])
         gradientView.heightAnchor.constraint(equalToConstant: 72).isActive = true
-        gradientView.widthAnchor.constraint(greaterThanOrEqualToConstant: 260).isActive = true
 
         let symbolNames = ["cloud.sun.rain.fill", "thermometer.sun.fill", "wind", "moon.stars.fill"]
         let symbolImageViews: [NSView] = symbolNames.map { symbolName in
             let imageView = NSImageView()
             imageView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.image = NSImage.demoSymbol(symbolName, pointSize: 24)
-            imageView.contentTintColor = DemoPalette.accent
+            imageView.image = NSImage.demoSymbol(symbolName, pointSize: 22)
+            imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 22, weight: .regular)
+                .applying(.preferringMulticolor())
             return imageView
         }
-        let symbolRow = NSStackView(
+        let symbolRowStackView = NSStackView(
             orientation: .horizontal,
-            spacing: 24,
+            spacing: 0,
             alignment: .centerY,
-            views: symbolImageViews + [NSView.flexibleSpacer()]
+            distribution: .fillEqually,
+            views: symbolImageViews
         )
 
-        return makeCard(title: "IMAGES & LAYERS", contentViews: [gradientView, symbolRow])
+        return FormSectionView(title: "Images and Layers", rows: [
+            FormContentRowView(contentView: gradientView),
+            FormContentRowView(contentView: symbolRowStackView),
+        ])
     }
 
     // MARK: - Actions

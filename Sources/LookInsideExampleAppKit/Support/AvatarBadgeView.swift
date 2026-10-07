@@ -56,7 +56,7 @@ final class OnlineIndicatorView: NSView {
         translatesAutoresizingMaskIntoConstraints = false
         wantsLayer = true
 
-        ringLayer.backgroundColor = DemoPalette.cardBackground.cgColor
+        ringLayer.backgroundColor = DemoPalette.windowBackground.cgColor
         dotLayer.backgroundColor = NSColor.systemGreen.cgColor
         layer?.addSublayer(ringLayer)
         layer?.addSublayer(dotLayer)
@@ -86,7 +86,7 @@ final class OnlineIndicatorView: NSView {
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            ringLayer.backgroundColor = DemoPalette.cardBackground.cgColor
+            ringLayer.backgroundColor = DemoPalette.windowBackground.cgColor
             dotLayer.backgroundColor = NSColor.systemGreen.cgColor
         }
     }

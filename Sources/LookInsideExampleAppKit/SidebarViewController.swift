@@ -15,6 +15,10 @@ final class SidebarNode {
         self.children = children
     }
 
+    convenience init(destination: DemoDestination) {
+        self.init(title: destination.title, symbolName: destination.symbolName, destination: destination)
+    }
+
     var isGroup: Bool {
         destination == nil
     }
@@ -22,20 +26,18 @@ final class SidebarNode {
 
 /// The source list. Traditional data source and delegate rather than a
 /// diffable one — `NSOutlineView` has no diffable data source, and the tree
-/// here is a fixed four rows in two groups.
+/// here is fixed: a top-level Welcome row and one group of demos.
 final class SidebarViewController: NSViewController {
     private let scrollView = NSScrollView()
     private let outlineView = NSOutlineView()
 
     private let rootNodes: [SidebarNode] = [
+        SidebarNode(destination: .welcome),
         SidebarNode(title: "Demos", children: [
-            SidebarNode(title: DemoDestination.music.title, symbolName: DemoDestination.music.symbolName, destination: .music),
-            SidebarNode(title: DemoDestination.feed.title, symbolName: DemoDestination.feed.symbolName, destination: .feed),
-            SidebarNode(title: DemoDestination.chat.title, symbolName: DemoDestination.chat.symbolName, destination: .chat),
-            SidebarNode(title: DemoDestination.controls.title, symbolName: DemoDestination.controls.symbolName, destination: .controls),
-        ]),
-        SidebarNode(title: "Server", children: [
-            SidebarNode(title: DemoDestination.status.title, symbolName: DemoDestination.status.symbolName, destination: .status),
+            SidebarNode(destination: .music),
+            SidebarNode(destination: .feed),
+            SidebarNode(destination: .chat),
+            SidebarNode(destination: .controls),
         ]),
     ]
 
@@ -54,7 +56,7 @@ final class SidebarViewController: NSViewController {
         outlineView.style = .sourceList
         outlineView.rowSizeStyle = .default
         outlineView.floatsGroupRows = false
-        outlineView.indentationPerLevel = 8
+        outlineView.indentationPerLevel = 0
         outlineView.dataSource = self
         outlineView.delegate = self
 
@@ -62,6 +64,7 @@ final class SidebarViewController: NSViewController {
         scrollView.documentView = outlineView
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = false
+        scrollView.applyDemoScrollerStyle()
         containerView.addSubview(scrollView)
         scrollView.pinEdges(to: containerView)
     }
@@ -69,13 +72,19 @@ final class SidebarViewController: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         guard outlineView.selectedRow < 0 else { return }
-        for node in rootNodes {
+        for node in rootNodes where node.isGroup {
             outlineView.expandItem(node)
         }
-        let firstDestinationRow = outlineView.row(forItem: rootNodes.first?.children.first)
-        if firstDestinationRow >= 0 {
-            outlineView.selectRowIndexes(IndexSet(integer: firstDestinationRow), byExtendingSelection: false)
-        }
+        select(.welcome)
+    }
+
+    /// Selects the row for `destination`, which in turn shows it.
+    func select(_ destination: DemoDestination) {
+        let allNodes = rootNodes + rootNodes.flatMap(\.children)
+        guard let node = allNodes.first(where: { $0.destination == destination }) else { return }
+        let row = outlineView.row(forItem: node)
+        guard row >= 0 else { return }
+        outlineView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
     }
 }
 
@@ -134,7 +143,7 @@ final class SidebarItemCellView: NSTableCellView {
     init(isGroup: Bool) {
         titleLabel = NSTextField.demoLabel(
             font: isGroup
-                ? .preferredFont(forTextStyle: .caption1).withWeight(.semibold)
+                ? .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .semibold)
                 : .preferredFont(forTextStyle: .body),
             color: isGroup ? DemoPalette.secondaryLabel : DemoPalette.primaryLabel
         )
@@ -146,7 +155,7 @@ final class SidebarItemCellView: NSTableCellView {
 
         let rowStackView = NSStackView(
             orientation: .horizontal,
-            spacing: 6,
+            spacing: 8,
             alignment: .centerY,
             views: isGroup ? [titleLabel] : [symbolImageView, titleLabel]
         )
@@ -166,7 +175,7 @@ final class SidebarItemCellView: NSTableCellView {
     }
 
     func configure(with node: SidebarNode) {
-        titleLabel.stringValue = node.isGroup ? node.title.uppercased() : node.title
+        titleLabel.stringValue = node.title
         if let symbolName = node.symbolName {
             symbolImageView.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
         }

@@ -10,6 +10,14 @@ final class MessageBubbleView: NSView {
     )
     private let avatarBadgeView: AvatarBadgeView
     private let bubbleContainerView = NSView()
+    /// The wrapping label of a text bubble; its wrap width follows the
+    /// transcript width in `layout()`.
+    private var bodyLabel: NSTextField?
+
+    private static let maximumTextWidth: CGFloat = 420
+    /// Room taken by the avatar, the opposite-side margin and the bubble's
+    /// own padding.
+    private static let reservedWidth: CGFloat = 26 + 8 + 48 + 24
 
     init(message: ChatMessage, conversation: Conversation, showsAvatar: Bool, showsTimestamp: Bool) {
         avatarBadgeView = AvatarBadgeView(
@@ -50,12 +58,12 @@ final class MessageBubbleView: NSView {
         if message.isFromMe {
             constraints += [
                 bubbleContainerView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                bubbleContainerView.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 64),
+                bubbleContainerView.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 48),
             ]
         } else {
             constraints += [
                 bubbleContainerView.leadingAnchor.constraint(equalTo: avatarBadgeView.trailingAnchor, constant: 8),
-                bubbleContainerView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -64),
+                bubbleContainerView.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -48),
             ]
         }
         NSLayoutConstraint.activate(constraints)
@@ -64,6 +72,19 @@ final class MessageBubbleView: NSView {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    /// Wraps text to the transcript's current width, so a narrow window
+    /// gets taller bubbles instead of clipped ones.
+    override func layout() {
+        if let bodyLabel, bounds.width > 0 {
+            let wrapWidth = max(120, min(Self.maximumTextWidth, bounds.width - Self.reservedWidth))
+            if bodyLabel.preferredMaxLayoutWidth != wrapWidth {
+                bodyLabel.preferredMaxLayoutWidth = wrapWidth
+                bodyLabel.invalidateIntrinsicContentSize()
+            }
+        }
+        super.layout()
     }
 
     private func makePayloadView(for message: ChatMessage) -> NSView {
@@ -92,7 +113,11 @@ final class MessageBubbleView: NSView {
                 insets: NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
             )
         }
-        bodyLabel.preferredMaxLayoutWidth = 420
+        bodyLabel.preferredMaxLayoutWidth = Self.maximumTextWidth
+        // Below the transcript's width priority, so the bubble yields to the
+        // column instead of widening it; `layout()` then rewraps the text.
+        bodyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        self.bodyLabel = bodyLabel
         return bubbleBoxView
     }
 
@@ -154,7 +179,7 @@ final class MessageBubbleView: NSView {
     private func makeBubbleBackground(isFromMe: Bool) -> NSBox {
         CardBoxView(
             cornerRadius: DemoMetrics.bubbleCornerRadius,
-            fillColor: isFromMe ? DemoPalette.accent : DemoPalette.cardBackground
+            fillColor: isFromMe ? DemoPalette.accent : DemoPalette.incomingBubble
         )
     }
 }

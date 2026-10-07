@@ -17,7 +17,7 @@ final class ComposerView: NSView {
         cardBoxView.pinEdges(to: self)
 
         inputTextField.translatesAutoresizingMaskIntoConstraints = false
-        inputTextField.placeholderString = "Share something with your friends..."
+        inputTextField.placeholderString = "What’s on your mind?"
         inputTextField.font = .preferredFont(forTextStyle: .body)
         inputTextField.bezelStyle = .roundedBezel
         inputTextField.isEditable = true

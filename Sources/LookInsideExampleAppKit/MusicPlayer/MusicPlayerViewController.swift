@@ -1,28 +1,25 @@
 import AppKit
 
-/// The "Listening" screen: a vertical `NSStackView` inside an `NSScrollView`,
-/// with a hand-drawn artwork view and standard AppKit controls.
+/// The Music screen: a now-playing panel — artwork beside the transport
+/// controls, the way a Mac player lays it out — above the queue and a
+/// horizontally scrolling playlist strip, all in one vertical `NSStackView`
+/// inside an `NSScrollView`.
 final class MusicPlayerViewController: NSViewController {
-    private let scrollView = NSScrollView()
-    private let documentView = FlippedView()
-    private let contentStackView = NSStackView(orientation: .vertical, spacing: 24, alignment: .centerX)
+    private let contentStackView = NSStackView(orientation: .vertical, spacing: 32, alignment: .leading)
 
     private let artworkView = AlbumArtworkView()
     private let trackTitleLabel = NSTextField.demoLabel(
-        font: .preferredFont(forTextStyle: .title2).withWeight(.bold),
+        font: .systemFont(ofSize: 24, weight: .bold),
         color: DemoPalette.primaryLabel,
-        alignment: .center,
         maximumNumberOfLines: 2
     )
     private let artistLabel = NSTextField.demoLabel(
-        font: .preferredFont(forTextStyle: .body),
-        color: DemoPalette.secondaryLabel,
-        alignment: .center
+        font: .preferredFont(forTextStyle: .title3),
+        color: DemoPalette.secondaryLabel
     )
     private let albumLabel = NSTextField.demoLabel(
         font: .preferredFont(forTextStyle: .caption2),
-        color: DemoPalette.tertiaryLabel,
-        alignment: .center
+        color: DemoPalette.tertiaryLabel
     )
 
     private let progressSlider = NSSlider()
@@ -36,7 +33,7 @@ final class MusicPlayerViewController: NSViewController {
         alignment: .right
     )
 
-    private let playPauseBackgroundView = GradientView(cornerRadius: 34)
+    private let playPauseBackgroundView = GradientView(cornerRadius: 26)
     private let playPauseButton = NSButton()
     private let shuffleButton = NSButton()
     private let repeatButton = NSButton()
@@ -49,6 +46,8 @@ final class MusicPlayerViewController: NSViewController {
     private var isPlaying = true
     private var isShuffling = false
     private var repeatMode: RepeatMode = .off
+    private var showsFullQueue = false
+    private let seeQueueButton = NSButton()
 
     private var currentTrack: MusicTrack {
         MusicTrack.queue[currentTrackIndex]
@@ -59,13 +58,13 @@ final class MusicPlayerViewController: NSViewController {
         containerView.translatesAutoresizingMaskIntoConstraints = false
         view = containerView
 
-        buildScrollView(in: containerView)
-        contentStackView.addArrangedSubview(makeNowPlayingSection())
-        contentStackView.addArrangedSubview(makeProgressSection())
-        contentStackView.addArrangedSubview(makeTransportSection())
-        contentStackView.addArrangedSubview(makeSecondaryControlsSection())
+        contentStackView.addArrangedSubview(makeNowPlayingPanel())
         contentStackView.addArrangedSubview(makeUpNextSection())
         contentStackView.addArrangedSubview(makePlaylistSection())
+        for sectionView in contentStackView.arrangedSubviews {
+            sectionView.widthAnchor.constraint(equalTo: contentStackView.widthAnchor).isActive = true
+        }
+        NSScrollView.installCenteredColumn(contentStackView, in: containerView, maximumWidth: 760, verticalInset: 28)
     }
 
     override func viewDidLoad() {
@@ -85,60 +84,42 @@ final class MusicPlayerViewController: NSViewController {
 
     // MARK: - Layout
 
-    private func buildScrollView(in containerView: NSView) {
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.hasVerticalScroller = true
-        scrollView.drawsBackground = false
-        containerView.addSubview(scrollView)
-        scrollView.pinEdges(to: containerView)
-
-        documentView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.documentView = documentView
-        documentView.addSubview(contentStackView)
-
-        let clipView = scrollView.contentView
-        let preferredWidthConstraint = contentStackView.widthAnchor.constraint(
-            equalTo: documentView.widthAnchor,
-            constant: -48
-        )
-        preferredWidthConstraint.priority = .defaultHigh
-
-        NSLayoutConstraint.activate([
-            documentView.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
-            documentView.trailingAnchor.constraint(equalTo: clipView.trailingAnchor),
-            documentView.topAnchor.constraint(equalTo: clipView.topAnchor),
-            documentView.widthAnchor.constraint(equalTo: clipView.widthAnchor),
-
-            contentStackView.topAnchor.constraint(equalTo: documentView.topAnchor, constant: 28),
-            contentStackView.bottomAnchor.constraint(equalTo: documentView.bottomAnchor, constant: -28),
-            contentStackView.centerXAnchor.constraint(equalTo: documentView.centerXAnchor),
-            contentStackView.leadingAnchor.constraint(greaterThanOrEqualTo: documentView.leadingAnchor, constant: 24),
-            contentStackView.widthAnchor.constraint(lessThanOrEqualToConstant: DemoMetrics.contentMaximumWidth),
-            preferredWidthConstraint,
-        ])
-    }
-
-    private func makeNowPlayingSection() -> NSView {
+    private func makeNowPlayingPanel() -> NSView {
         let textColumnStackView = NSStackView(
             orientation: .vertical,
-            spacing: 6,
-            alignment: .centerX,
+            spacing: 4,
+            alignment: .leading,
             views: [trackTitleLabel, artistLabel, albumLabel]
         )
+        textColumnStackView.setCustomSpacing(8, after: artistLabel)
 
-        let sectionStackView = NSStackView(
+        let controlsColumnStackView = NSStackView(
             orientation: .vertical,
-            spacing: 20,
-            alignment: .centerX,
-            views: [artworkView, textColumnStackView]
+            spacing: 18,
+            alignment: .leading,
+            views: [
+                textColumnStackView,
+                makeProgressSection(),
+                makeTransportSection(),
+                makeVolumeSection(),
+            ]
         )
+        for columnView in controlsColumnStackView.arrangedSubviews {
+            columnView.widthAnchor.constraint(equalTo: controlsColumnStackView.widthAnchor).isActive = true
+        }
+        controlsColumnStackView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         NSLayoutConstraint.activate([
-            artworkView.widthAnchor.constraint(equalToConstant: 240),
-            artworkView.heightAnchor.constraint(equalToConstant: 240),
-            textColumnStackView.widthAnchor.constraint(equalTo: sectionStackView.widthAnchor),
+            artworkView.widthAnchor.constraint(equalToConstant: 220),
+            artworkView.heightAnchor.constraint(equalToConstant: 220),
         ])
-        return sectionStackView
+
+        return NSStackView(
+            orientation: .horizontal,
+            spacing: 32,
+            alignment: .centerY,
+            views: [artworkView, controlsColumnStackView]
+        )
     }
 
     private func makeProgressSection() -> NSView {
@@ -172,19 +153,21 @@ final class MusicPlayerViewController: NSViewController {
     private func makeTransportSection() -> NSView {
         let previousTrackButton = NSButton.demoSymbolButton(
             symbolName: "backward.fill",
-            pointSize: 18,
+            pointSize: 20,
             target: self,
             action: #selector(playPreviousTrack)
         )
         previousTrackButton.contentTintColor = DemoPalette.primaryLabel
+        previousTrackButton.setAccessibilityLabel("Previous track")
 
         let nextTrackButton = NSButton.demoSymbolButton(
             symbolName: "forward.fill",
-            pointSize: 18,
+            pointSize: 20,
             target: self,
             action: #selector(playNextTrack)
         )
         nextTrackButton.contentTintColor = DemoPalette.primaryLabel
+        nextTrackButton.setAccessibilityLabel("Next track")
 
         playPauseButton.translatesAutoresizingMaskIntoConstraints = false
         playPauseButton.isBordered = false
@@ -195,23 +178,6 @@ final class MusicPlayerViewController: NSViewController {
         playPauseButton.action = #selector(togglePlayback)
         playPauseBackgroundView.addSubview(playPauseButton)
 
-        let transportStackView = NSStackView(
-            orientation: .horizontal,
-            spacing: 28,
-            alignment: .centerY,
-            views: [previousTrackButton, playPauseBackgroundView, nextTrackButton]
-        )
-
-        NSLayoutConstraint.activate([
-            playPauseBackgroundView.widthAnchor.constraint(equalToConstant: 68),
-            playPauseBackgroundView.heightAnchor.constraint(equalToConstant: 68),
-            playPauseButton.centerXAnchor.constraint(equalTo: playPauseBackgroundView.centerXAnchor),
-            playPauseButton.centerYAnchor.constraint(equalTo: playPauseBackgroundView.centerYAnchor),
-        ])
-        return transportStackView
-    }
-
-    private func makeSecondaryControlsSection() -> NSView {
         shuffleButton.translatesAutoresizingMaskIntoConstraints = false
         shuffleButton.image = NSImage.demoSymbol("shuffle", pointSize: 15)
         shuffleButton.imagePosition = .imageOnly
@@ -219,6 +185,7 @@ final class MusicPlayerViewController: NSViewController {
         shuffleButton.bezelStyle = .shadowlessSquare
         shuffleButton.target = self
         shuffleButton.action = #selector(toggleShuffle)
+        shuffleButton.setAccessibilityLabel("Shuffle")
 
         repeatButton.translatesAutoresizingMaskIntoConstraints = false
         repeatButton.imagePosition = .imageOnly
@@ -226,35 +193,55 @@ final class MusicPlayerViewController: NSViewController {
         repeatButton.bezelStyle = .shadowlessSquare
         repeatButton.target = self
         repeatButton.action = #selector(cycleRepeatMode)
+        repeatButton.setAccessibilityLabel("Repeat")
 
+        let transportStackView = NSStackView(
+            orientation: .horizontal,
+            spacing: 24,
+            alignment: .centerY,
+            views: [
+                shuffleButton,
+                NSView.flexibleSpacer(),
+                previousTrackButton,
+                playPauseBackgroundView,
+                nextTrackButton,
+                NSView.flexibleSpacer(),
+                repeatButton,
+            ]
+        )
+
+        NSLayoutConstraint.activate([
+            playPauseBackgroundView.widthAnchor.constraint(equalToConstant: 52),
+            playPauseBackgroundView.heightAnchor.constraint(equalToConstant: 52),
+            playPauseButton.centerXAnchor.constraint(equalTo: playPauseBackgroundView.centerXAnchor),
+            playPauseButton.centerYAnchor.constraint(equalTo: playPauseBackgroundView.centerYAnchor),
+        ])
+        return transportStackView
+    }
+
+    private func makeVolumeSection() -> NSView {
         let quietSpeakerImageView = NSImageView()
         quietSpeakerImageView.translatesAutoresizingMaskIntoConstraints = false
-        quietSpeakerImageView.image = NSImage.demoSymbol("speaker.fill", pointSize: 12)
+        quietSpeakerImageView.image = NSImage.demoSymbol("speaker.fill", pointSize: 11)
         quietSpeakerImageView.contentTintColor = DemoPalette.secondaryLabel
 
         let loudSpeakerImageView = NSImageView()
         loudSpeakerImageView.translatesAutoresizingMaskIntoConstraints = false
-        loudSpeakerImageView.image = NSImage.demoSymbol("speaker.wave.3.fill", pointSize: 12)
+        loudSpeakerImageView.image = NSImage.demoSymbol("speaker.wave.3.fill", pointSize: 11)
         loudSpeakerImageView.contentTintColor = DemoPalette.secondaryLabel
 
         volumeSlider.translatesAutoresizingMaskIntoConstraints = false
         volumeSlider.minValue = 0
         volumeSlider.maxValue = 1
         volumeSlider.doubleValue = 0.65
-        volumeSlider.widthAnchor.constraint(equalToConstant: 140).isActive = true
+        volumeSlider.controlSize = .small
+        volumeSlider.setAccessibilityLabel("Volume")
 
-        let volumeStackView = NSStackView(
+        return NSStackView(
             orientation: .horizontal,
             spacing: 10,
             alignment: .centerY,
             views: [quietSpeakerImageView, volumeSlider, loudSpeakerImageView]
-        )
-
-        return NSStackView(
-            orientation: .horizontal,
-            spacing: 12,
-            alignment: .centerY,
-            views: [shuffleButton, NSView.flexibleSpacer(), volumeStackView, NSView.flexibleSpacer(), repeatButton]
         )
     }
 
@@ -265,7 +252,9 @@ final class MusicPlayerViewController: NSViewController {
             color: DemoPalette.primaryLabel
         )
 
-        let seeQueueButton = NSButton(title: "See queue", target: self, action: #selector(scrollToQueue))
+        seeQueueButton.title = "Show All"
+        seeQueueButton.target = self
+        seeQueueButton.action = #selector(toggleFullQueue)
         seeQueueButton.translatesAutoresizingMaskIntoConstraints = false
         seeQueueButton.bezelStyle = .inline
         seeQueueButton.isBordered = false
@@ -298,7 +287,7 @@ final class MusicPlayerViewController: NSViewController {
 
     private func makePlaylistSection() -> NSView {
         let headerLabel = NSTextField.demoLabel(
-            "Made for you",
+            "Made for You",
             font: .preferredFont(forTextStyle: .headline),
             color: DemoPalette.primaryLabel
         )
@@ -308,6 +297,7 @@ final class MusicPlayerViewController: NSViewController {
         horizontalScrollView.hasHorizontalScroller = true
         horizontalScrollView.hasVerticalScroller = false
         horizontalScrollView.drawsBackground = false
+        horizontalScrollView.applyDemoScrollerStyle()
         horizontalScrollView.horizontalScrollElasticity = .allowed
 
         let playlistRowStackView = NSStackView(
@@ -373,7 +363,8 @@ final class MusicPlayerViewController: NSViewController {
             currentTrack.tint.color,
             currentTrack.tint.color.withAlphaComponent(0.7),
         ])
-        playPauseButton.image = NSImage.demoSymbol(isPlaying ? "pause.fill" : "play.fill", pointSize: 24, weight: .bold)
+        playPauseButton.image = NSImage.demoSymbol(isPlaying ? "pause.fill" : "play.fill", pointSize: 20, weight: .bold)
+        playPauseButton.setAccessibilityLabel(isPlaying ? "Pause" : "Play")
     }
 
     private func updateSecondaryControlAppearance() {
@@ -388,7 +379,11 @@ final class MusicPlayerViewController: NSViewController {
             existingRow.removeFromSuperview()
         }
 
-        let upcoming = Array(MusicTrack.queue.enumerated().dropFirst(currentTrackIndex + 1).prefix(3))
+        let upcoming = Array(
+            MusicTrack.queue.enumerated()
+                .dropFirst(currentTrackIndex + 1)
+                .prefix(showsFullQueue ? MusicTrack.queue.count : 3)
+        )
         for (offset, element) in upcoming.enumerated() {
             let rowView = QueueRowView(track: element.element, isCurrent: false) { [weak self] in
                 self?.selectTrack(at: element.offset)
@@ -447,10 +442,12 @@ final class MusicPlayerViewController: NSViewController {
         updateSecondaryControlAppearance()
     }
 
-    /// The Mac layout has no modal sheet for the queue — the "Up Next" card is
-    /// already on screen, so the button just scrolls it into view.
+    /// The Mac layout has no modal sheet for the queue: the button expands
+    /// the "Up Next" card in place instead.
     @objc
-    private func scrollToQueue() {
-        upNextCardView.scrollToVisible(upNextCardView.bounds)
+    private func toggleFullQueue() {
+        showsFullQueue.toggle()
+        seeQueueButton.title = showsFullQueue ? "Show Less" : "Show All"
+        rebuildUpNextRows()
     }
 }
