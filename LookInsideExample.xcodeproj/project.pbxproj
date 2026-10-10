@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 56;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -514,9 +514,8 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2720;
 				ORGANIZATIONNAME = LookInside;
-				TargetAttributes = {
-				};
 			};
 			buildConfigurationList = 9D64C6B9CBFFEC45CA9E0237 /* Build configuration list for PBXProject "LookInsideExample" */;
 			compatibilityVersion = "Xcode 14.0";
