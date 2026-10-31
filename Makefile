@@ -15,6 +15,10 @@ UIKIT_SCHEME    := LookInsideExampleUIKit
 UIKIT_APP_NAME  := LookInsideExampleUIKit
 APPKIT_SCHEME   := LookInsideExampleAppKit
 APPKIT_APP_NAME := LookInsideExampleAppKit
+TV_SCHEME       := LookInsideExampleTV
+TV_APP_NAME     := LookInsideExampleTV
+TV_UIKIT_SCHEME   := LookInsideExampleTVUIKit
+TV_UIKIT_APP_NAME := LookInsideExampleTVUIKit
 CONFIGURATION   := Debug
 TUIST           ?= tuist
 DERIVED_DATA   ?= /private/tmp/lookinside-example-deriveddata
@@ -27,11 +31,19 @@ LOOKINSIDE_SERVER_PATH ?=
 SIM_DESTINATION    := generic/platform=iOS Simulator
 DEVICE_DESTINATION := generic/platform=iOS
 MAC_DESTINATION    := generic/platform=macOS
+TV_SIM_DESTINATION := generic/platform=tvOS Simulator
 
 SIMULATOR_NAME     ?= iPhone 16
 SIMULATOR_UDID     = ${shell xcrun simctl list devices available | sed -nE 's/^[[:space:]]*$(SIMULATOR_NAME)( \([^)]*\))? \(([A-F0-9-]+)\).*/\2/p' | head -1}
 BUNDLE_ID          := app.lookinside.example
 UIKIT_BUNDLE_ID    := app.lookinside.example.uikit
+
+# Apple TV simulator names carry parentheses, which a regular expression
+# would read as groups, so the name is compared as plain text.
+TV_SIMULATOR_NAME  ?= Apple TV 4K (3rd generation)
+TV_SIMULATOR_UDID  = ${shell xcrun simctl list -j devices available | /usr/bin/python3 -c 'import json, sys; devices = [device for runtime_devices in json.load(sys.stdin)["devices"].values() for device in runtime_devices]; print(next((device["udid"] for device in devices if device["name"] == sys.argv[1]), ""))' '$(TV_SIMULATOR_NAME)'}
+TV_BUNDLE_ID       := app.lookinside.example.tv
+TV_UIKIT_BUNDLE_ID := app.lookinside.example.tv.uikit
 
 SWIFTFORMAT_EXCLUDES := build,.build,DerivedData
 
@@ -50,9 +62,10 @@ MAC_SIGN_FLAGS    := CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO CODE_SIGN
 
 .PHONY: all help \
         generate \
-        build build-sim build-device build-mac build-uikit build-appkit build-all \
+        build build-sim build-device build-mac build-uikit build-appkit build-tv build-tv-uikit build-all \
         run boot install launch run-mac \
         run-uikit install-uikit launch-uikit run-appkit \
+        boot-tv run-tv install-tv launch-tv run-tv-uikit install-tv-uikit launch-tv-uikit \
         format format-lint \
         clean
 
@@ -75,14 +88,22 @@ help:
 	@echo "Build (native apps):"
 	@echo "  build-uikit        Build the pure-UIKit iOS app for the Simulator"
 	@echo "  build-appkit       Build the pure-AppKit macOS app"
-	@echo "  build-all          Build all three apps"
+	@echo ""
+	@echo "Build (Apple TV apps):"
+	@echo "  build-tv           Build the SwiftUI tvOS app for the Simulator"
+	@echo "  build-tv-uikit     Build the pure-UIKit tvOS app for the Simulator"
+	@echo ""
+	@echo "  build-all          Build all five apps"
 	@echo ""
 	@echo "Run:"
 	@echo "  run                Boot \$$(SIMULATOR_NAME), install, and launch the SwiftUI app"
 	@echo "  run-mac            Build and launch the SwiftUI app on this Mac"
 	@echo "  run-uikit          Boot \$$(SIMULATOR_NAME), install, and launch the UIKit app"
 	@echo "  run-appkit         Build and launch the AppKit app on this Mac"
+	@echo "  run-tv             Boot \$$(TV_SIMULATOR_NAME), install, and launch the SwiftUI tvOS app"
+	@echo "  run-tv-uikit       Boot \$$(TV_SIMULATOR_NAME), install, and launch the UIKit tvOS app"
 	@echo "  boot               Boot \$$(SIMULATOR_NAME) (no-op if already booted)"
+	@echo "  boot-tv            Boot \$$(TV_SIMULATOR_NAME) (no-op if already booted)"
 	@echo "  install            Install the built SwiftUI app onto the booted simulator"
 	@echo "  launch             Launch the installed SwiftUI app on the booted simulator"
 	@echo ""
@@ -96,6 +117,8 @@ help:
 	@echo "Variables:"
 	@echo "  SIMULATOR_NAME     Simulator device name (default: iPhone 16)"
 	@echo "  SIMULATOR_UDID     Simulator UDID resolved from SIMULATOR_NAME"
+	@echo "  TV_SIMULATOR_NAME  Apple TV simulator name (default: Apple TV 4K (3rd generation))"
+	@echo "  TV_SIMULATOR_UDID  Simulator UDID resolved from TV_SIMULATOR_NAME"
 	@echo "  LOOKINSIDE_SERVER_PATH Optional local server package path for Tuist generation"
 	@echo "  DERIVED_DATA       Derived data path (default: /private/tmp/lookinside-example-deriveddata)"
 
@@ -144,7 +167,23 @@ build-appkit:
 	    $(MAC_SIGN_FLAGS) \
 	    build
 
-build-all: build-sim build-uikit build-appkit
+build-tv:
+	mkdir -p "$(BUILD_HOME)" "$(XDG_CACHE_HOME)" "$(MODULE_CACHE)"
+	HOME="$(BUILD_HOME)" XDG_CACHE_HOME="$(XDG_CACHE_HOME)" CLANG_MODULE_CACHE_PATH="$(MODULE_CACHE)" SWIFTPM_MODULECACHE_OVERRIDE="$(MODULE_CACHE)" $(XCODEBUILD) \
+	    -scheme $(TV_SCHEME) \
+	    -destination "$(TV_SIM_DESTINATION)" \
+	    $(SIM_SIGN_FLAGS) \
+	    build
+
+build-tv-uikit:
+	mkdir -p "$(BUILD_HOME)" "$(XDG_CACHE_HOME)" "$(MODULE_CACHE)"
+	HOME="$(BUILD_HOME)" XDG_CACHE_HOME="$(XDG_CACHE_HOME)" CLANG_MODULE_CACHE_PATH="$(MODULE_CACHE)" SWIFTPM_MODULECACHE_OVERRIDE="$(MODULE_CACHE)" $(XCODEBUILD) \
+	    -scheme $(TV_UIKIT_SCHEME) \
+	    -destination "$(TV_SIM_DESTINATION)" \
+	    $(SIM_SIGN_FLAGS) \
+	    build
+
+build-all: build-sim build-uikit build-appkit build-tv build-tv-uikit
 
 # =============================================================================
 # Run on simulator
@@ -190,6 +229,39 @@ run-appkit: build-appkit
 	if [ -z "$$APP_PATH" ]; then echo "macOS app bundle not found under $(DERIVED_DATA)" >&2; exit 1; fi; \
 	echo "Launching $$APP_PATH"; \
 	open "$$APP_PATH"
+
+# =============================================================================
+# Run on the Apple TV simulator
+# =============================================================================
+
+boot-tv:
+	@if [ -z "$(TV_SIMULATOR_UDID)" ]; then echo "Simulator not found: $(TV_SIMULATOR_NAME). Create one in Xcode > Window > Devices and Simulators, or set TV_SIMULATOR_NAME." >&2; exit 1; fi
+	@xcrun simctl boot "$(TV_SIMULATOR_UDID)" 2>/dev/null || true
+	open -a Simulator
+
+install-tv: build-tv boot-tv
+	@APP_PATH=$$(find "$(DERIVED_DATA)/Build/Products" -name "$(TV_APP_NAME).app" -type d -path "*appletvsimulator*" | head -1); \
+	if [ -z "$$APP_PATH" ]; then echo "App bundle not found under $(DERIVED_DATA)" >&2; exit 1; fi; \
+	echo "Installing $$APP_PATH"; \
+	xcrun simctl install "$(TV_SIMULATOR_UDID)" "$$APP_PATH"
+
+launch-tv:
+	@if [ -z "$(TV_SIMULATOR_UDID)" ]; then echo "Simulator not found: $(TV_SIMULATOR_NAME)" >&2; exit 1; fi
+	xcrun simctl launch "$(TV_SIMULATOR_UDID)" "$(TV_BUNDLE_ID)"
+
+run-tv: install-tv launch-tv
+
+install-tv-uikit: build-tv-uikit boot-tv
+	@APP_PATH=$$(find "$(DERIVED_DATA)/Build/Products" -name "$(TV_UIKIT_APP_NAME).app" -type d -path "*appletvsimulator*" | head -1); \
+	if [ -z "$$APP_PATH" ]; then echo "App bundle not found under $(DERIVED_DATA)" >&2; exit 1; fi; \
+	echo "Installing $$APP_PATH"; \
+	xcrun simctl install "$(TV_SIMULATOR_UDID)" "$$APP_PATH"
+
+launch-tv-uikit:
+	@if [ -z "$(TV_SIMULATOR_UDID)" ]; then echo "Simulator not found: $(TV_SIMULATOR_NAME)" >&2; exit 1; fi
+	xcrun simctl launch "$(TV_SIMULATOR_UDID)" "$(TV_UIKIT_BUNDLE_ID)"
+
+run-tv-uikit: install-tv-uikit launch-tv-uikit
 
 # =============================================================================
 # Formatting

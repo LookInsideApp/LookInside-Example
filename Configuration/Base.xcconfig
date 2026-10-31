@@ -6,6 +6,8 @@
 LOOKINSIDE_EXAMPLE_BUNDLE_ID = app.lookinside.example
 LOOKINSIDE_EXAMPLE_UIKIT_BUNDLE_ID = app.lookinside.example.uikit
 LOOKINSIDE_EXAMPLE_APPKIT_BUNDLE_ID = app.lookinside.example.appkit
+LOOKINSIDE_EXAMPLE_TV_BUNDLE_ID = app.lookinside.example.tv
+LOOKINSIDE_EXAMPLE_TV_UIKIT_BUNDLE_ID = app.lookinside.example.tv.uikit
 
 DEVELOPMENT_TEAM =
 CODE_SIGN_STYLE = Automatic

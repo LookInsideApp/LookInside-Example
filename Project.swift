@@ -4,6 +4,8 @@ import ProjectDescription
 let targetName = "LookInsideExample"
 let uiKitTargetName = "LookInsideExampleUIKit"
 let appKitTargetName = "LookInsideExampleAppKit"
+let tvTargetName = "LookInsideExampleTV"
+let tvUIKitTargetName = "LookInsideExampleTVUIKit"
 let localServerPath = Environment.lookinsideServerPath.getString(default: "")
     .trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -140,6 +142,58 @@ let project = Project(
                 defaultSettings: .recommended(excluding: xcconfigManagedSettings)
             )
         ),
+        .target(
+            name: tvTargetName,
+            destinations: [.appleTv],
+            product: .app,
+            productName: tvTargetName,
+            bundleId: "$(LOOKINSIDE_EXAMPLE_TV_BUNDLE_ID)",
+            deploymentTargets: .tvOS("17.0"),
+            infoPlist: .file(path: "Sources/LookInsideExampleTV/Info.plist"),
+            sources: [
+                "Sources/LookInsideExampleTV/**/*.swift",
+                "Sources/DemoShared/**/*.swift",
+            ],
+            dependencies: [
+                .package(product: serverProduct),
+            ],
+            settings: .settings(
+                base: [
+                    "LD_RUNPATH_SEARCH_PATHS": [
+                        "$(inherited)",
+                        "@executable_path/Frameworks",
+                    ],
+                ],
+                configurations: configurations,
+                defaultSettings: .recommended(excluding: xcconfigManagedSettings)
+            )
+        ),
+        .target(
+            name: tvUIKitTargetName,
+            destinations: [.appleTv],
+            product: .app,
+            productName: tvUIKitTargetName,
+            bundleId: "$(LOOKINSIDE_EXAMPLE_TV_UIKIT_BUNDLE_ID)",
+            deploymentTargets: .tvOS("17.0"),
+            infoPlist: .file(path: "Sources/LookInsideExampleTVUIKit/Info.plist"),
+            sources: [
+                "Sources/LookInsideExampleTVUIKit/**/*.swift",
+                "Sources/DemoShared/**/*.swift",
+            ],
+            dependencies: [
+                .package(product: serverProduct),
+            ],
+            settings: .settings(
+                base: [
+                    "LD_RUNPATH_SEARCH_PATHS": [
+                        "$(inherited)",
+                        "@executable_path/Frameworks",
+                    ],
+                ],
+                configurations: configurations,
+                defaultSettings: .recommended(excluding: xcconfigManagedSettings)
+            )
+        ),
     ],
     schemes: [
         .scheme(
@@ -161,6 +215,20 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target(appKitTargetName)]),
             runAction: .runAction(configuration: "Debug", executable: .target(appKitTargetName)),
+            archiveAction: .archiveAction(configuration: "Release")
+        ),
+        .scheme(
+            name: tvTargetName,
+            shared: true,
+            buildAction: .buildAction(targets: [.target(tvTargetName)]),
+            runAction: .runAction(configuration: "Debug", executable: .target(tvTargetName)),
+            archiveAction: .archiveAction(configuration: "Release")
+        ),
+        .scheme(
+            name: tvUIKitTargetName,
+            shared: true,
+            buildAction: .buildAction(targets: [.target(tvUIKitTargetName)]),
+            runAction: .runAction(configuration: "Debug", executable: .target(tvUIKitTargetName)),
             archiveAction: .archiveAction(configuration: "Release")
         ),
     ],
