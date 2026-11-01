@@ -39,9 +39,10 @@ BUNDLE_ID          := app.lookinside.example
 UIKIT_BUNDLE_ID    := app.lookinside.example.uikit
 
 # Apple TV simulator names carry parentheses, which a regular expression
-# would read as groups, so the name is compared as plain text.
-TV_SIMULATOR_NAME  ?= Apple TV 4K (3rd generation)
-TV_SIMULATOR_UDID  = ${shell xcrun simctl list -j devices available | /usr/bin/python3 -c 'import json, sys; devices = [device for runtime_devices in json.load(sys.stdin)["devices"].values() for device in runtime_devices]; print(next((device["udid"] for device in devices if device["name"] == sys.argv[1]), ""))' '$(TV_SIMULATOR_NAME)'}
+# would read as groups, so the name is compared as plain text. Xcode creates
+# several devices with the default name; a booted one wins.
+TV_SIMULATOR_NAME  ?= Apple TV 4K (4th generation)
+TV_SIMULATOR_UDID  = ${shell xcrun simctl list -j devices available | /usr/bin/python3 -c 'import json, sys; devices = [device for runtime_devices in json.load(sys.stdin)["devices"].values() for device in runtime_devices]; print(next((device["udid"] for device in sorted(devices, key=lambda device: device["state"] != "Booted") if device["name"] == sys.argv[1]), ""))' '$(TV_SIMULATOR_NAME)'}
 TV_BUNDLE_ID       := app.lookinside.example.tv
 TV_UIKIT_BUNDLE_ID := app.lookinside.example.tv.uikit
 
@@ -117,7 +118,7 @@ help:
 	@echo "Variables:"
 	@echo "  SIMULATOR_NAME     Simulator device name (default: iPhone 16)"
 	@echo "  SIMULATOR_UDID     Simulator UDID resolved from SIMULATOR_NAME"
-	@echo "  TV_SIMULATOR_NAME  Apple TV simulator name (default: Apple TV 4K (3rd generation))"
+	@echo "  TV_SIMULATOR_NAME  Apple TV simulator name (default: Apple TV 4K (4th generation))"
 	@echo "  TV_SIMULATOR_UDID  Simulator UDID resolved from TV_SIMULATOR_NAME"
 	@echo "  LOOKINSIDE_SERVER_PATH Optional local server package path for Tuist generation"
 	@echo "  DERIVED_DATA       Derived data path (default: /private/tmp/lookinside-example-deriveddata)"

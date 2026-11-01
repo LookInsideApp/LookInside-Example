@@ -48,7 +48,7 @@ make run-tv         # SwiftUI
 make run-tv-uikit   # UIKit
 ```
 
-They use the `Apple TV 4K (3rd generation)` simulator; pick another with `TV_SIMULATOR_NAME="Apple TV" make run-tv`. The tvOS simulator runtime is a separate download in Xcode › Settings › Components.
+They use the `Apple TV 4K (4th generation)` simulator that Xcode creates, preferring a booted one; pick another with `TV_SIMULATOR_NAME="Apple TV 4K (4th generation) (at 1080p)" make run-tv`. The tvOS simulator runtime is a separate download in Xcode › Settings › Components.
 
 You can also open `LookInsideExample.xcodeproj` in Xcode, pick a scheme, and press Run.
 
