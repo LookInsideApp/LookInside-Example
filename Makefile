@@ -19,6 +19,10 @@ TV_SCHEME       := LookInsideExampleTV
 TV_APP_NAME     := LookInsideExampleTV
 TV_UIKIT_SCHEME   := LookInsideExampleTVUIKit
 TV_UIKIT_APP_NAME := LookInsideExampleTVUIKit
+WATCH_SCHEME      := LookInsideExampleWatch
+WATCH_APP_NAME    := LookInsideExampleWatch
+WATCHKIT_SCHEME   := LookInsideExampleWatchKit
+WATCHKIT_APP_NAME := LookInsideExampleWatchKit
 CONFIGURATION   := Debug
 TUIST           ?= tuist
 DERIVED_DATA   ?= /private/tmp/lookinside-example-deriveddata
@@ -32,6 +36,7 @@ SIM_DESTINATION    := generic/platform=iOS Simulator
 DEVICE_DESTINATION := generic/platform=iOS
 MAC_DESTINATION    := generic/platform=macOS
 TV_SIM_DESTINATION := generic/platform=tvOS Simulator
+WATCH_SIM_DESTINATION := generic/platform=watchOS Simulator
 
 SIMULATOR_NAME     ?= iPhone 16
 SIMULATOR_UDID     = ${shell xcrun simctl list devices available | sed -nE 's/^[[:space:]]*$(SIMULATOR_NAME)( \([^)]*\))? \(([A-F0-9-]+)\).*/\2/p' | head -1}
@@ -39,11 +44,18 @@ BUNDLE_ID          := app.lookinside.example
 UIKIT_BUNDLE_ID    := app.lookinside.example.uikit
 
 # Apple TV simulator names carry parentheses, which a regular expression
-# would read as groups, so the name is compared as plain text.
-TV_SIMULATOR_NAME  ?= Apple TV 4K (3rd generation)
-TV_SIMULATOR_UDID  = ${shell xcrun simctl list -j devices available | /usr/bin/python3 -c 'import json, sys; devices = [device for runtime_devices in json.load(sys.stdin)["devices"].values() for device in runtime_devices]; print(next((device["udid"] for device in devices if device["name"] == sys.argv[1]), ""))' '$(TV_SIMULATOR_NAME)'}
+# would read as groups, so the name is compared as plain text. Xcode creates
+# several devices with the default name; a booted one wins.
+TV_SIMULATOR_NAME  ?= Apple TV 4K (4th generation)
+TV_SIMULATOR_UDID  = ${shell xcrun simctl list -j devices available | /usr/bin/python3 -c 'import json, sys; devices = [device for runtime_devices in json.load(sys.stdin)["devices"].values() for device in runtime_devices]; print(next((device["udid"] for device in sorted(devices, key=lambda device: device["state"] != "Booted") if device["name"] == sys.argv[1]), ""))' '$(TV_SIMULATOR_NAME)'}
 TV_BUNDLE_ID       := app.lookinside.example.tv
 TV_UIKIT_BUNDLE_ID := app.lookinside.example.tv.uikit
+
+# Apple Watch simulator names carry parentheses too; same lookup as above.
+WATCH_SIMULATOR_NAME ?= Apple Watch Series 12 (46mm)
+WATCH_SIMULATOR_UDID  = ${shell xcrun simctl list -j devices available | /usr/bin/python3 -c 'import json, sys; devices = [device for runtime_devices in json.load(sys.stdin)["devices"].values() for device in runtime_devices]; print(next((device["udid"] for device in sorted(devices, key=lambda device: device["state"] != "Booted") if device["name"] == sys.argv[1]), ""))' '$(WATCH_SIMULATOR_NAME)'}
+WATCH_BUNDLE_ID      := app.lookinside.example.watch
+WATCHKIT_BUNDLE_ID   := app.lookinside.example.watchkit
 
 SWIFTFORMAT_EXCLUDES := build,.build,DerivedData
 
@@ -61,11 +73,12 @@ DEVICE_SIGN_FLAGS := CODE_SIGNING_ALLOWED=NO  CODE_SIGNING_REQUIRED=NO CODE_SIGN
 MAC_SIGN_FLAGS    := CODE_SIGNING_ALLOWED=YES CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM=$(DEVELOPMENT_TEAM)
 
 .PHONY: all help \
-        generate \
-        build build-sim build-device build-mac build-uikit build-appkit build-tv build-tv-uikit build-all \
+        generate server-watch-framework \
+        build build-sim build-device build-mac build-uikit build-appkit build-tv build-tv-uikit build-watch build-watchkit build-all \
         run boot install launch run-mac \
         run-uikit install-uikit launch-uikit run-appkit \
         boot-tv run-tv install-tv launch-tv run-tv-uikit install-tv-uikit launch-tv-uikit \
+        boot-watch run-watch install-watch launch-watch run-watchkit install-watchkit launch-watchkit \
         format format-lint \
         clean
 
@@ -78,6 +91,8 @@ all: build-sim
 help:
 	@echo "Project generation:"
 	@echo "  generate           Regenerate $(PROJECT) with Tuist"
+	@echo "  server-watch-framework  Package the local server's watchOS Simulator slice"
+	@echo "                     (needs LOOKINSIDE_SERVER_PATH); run generate afterwards"
 	@echo ""
 	@echo "Build (SwiftUI app):"
 	@echo "  build              Alias for build-sim"
@@ -93,7 +108,11 @@ help:
 	@echo "  build-tv           Build the SwiftUI tvOS app for the Simulator"
 	@echo "  build-tv-uikit     Build the pure-UIKit tvOS app for the Simulator"
 	@echo ""
-	@echo "  build-all          Build all five apps"
+	@echo "Build (Apple Watch apps):"
+	@echo "  build-watch        Build the SwiftUI watchOS app for the Simulator"
+	@echo "  build-watchkit     Build the WatchKit storyboard app for the Simulator"
+	@echo ""
+	@echo "  build-all          Build all seven apps"
 	@echo ""
 	@echo "Run:"
 	@echo "  run                Boot \$$(SIMULATOR_NAME), install, and launch the SwiftUI app"
@@ -102,8 +121,11 @@ help:
 	@echo "  run-appkit         Build and launch the AppKit app on this Mac"
 	@echo "  run-tv             Boot \$$(TV_SIMULATOR_NAME), install, and launch the SwiftUI tvOS app"
 	@echo "  run-tv-uikit       Boot \$$(TV_SIMULATOR_NAME), install, and launch the UIKit tvOS app"
+	@echo "  run-watch          Boot \$$(WATCH_SIMULATOR_NAME), install, and launch the SwiftUI watchOS app"
+	@echo "  run-watchkit       Boot \$$(WATCH_SIMULATOR_NAME), install, and launch the WatchKit app"
 	@echo "  boot               Boot \$$(SIMULATOR_NAME) (no-op if already booted)"
 	@echo "  boot-tv            Boot \$$(TV_SIMULATOR_NAME) (no-op if already booted)"
+	@echo "  boot-watch         Boot \$$(WATCH_SIMULATOR_NAME) (no-op if already booted)"
 	@echo "  install            Install the built SwiftUI app onto the booted simulator"
 	@echo "  launch             Launch the installed SwiftUI app on the booted simulator"
 	@echo ""
@@ -117,13 +139,22 @@ help:
 	@echo "Variables:"
 	@echo "  SIMULATOR_NAME     Simulator device name (default: iPhone 16)"
 	@echo "  SIMULATOR_UDID     Simulator UDID resolved from SIMULATOR_NAME"
-	@echo "  TV_SIMULATOR_NAME  Apple TV simulator name (default: Apple TV 4K (3rd generation))"
+	@echo "  TV_SIMULATOR_NAME  Apple TV simulator name (default: Apple TV 4K (4th generation))"
 	@echo "  TV_SIMULATOR_UDID  Simulator UDID resolved from TV_SIMULATOR_NAME"
+	@echo "  WATCH_SIMULATOR_NAME Apple Watch simulator name (default: Apple Watch Series 12 (46mm))"
+	@echo "  WATCH_SIMULATOR_UDID Simulator UDID resolved from WATCH_SIMULATOR_NAME"
 	@echo "  LOOKINSIDE_SERVER_PATH Optional local server package path for Tuist generation"
 	@echo "  DERIVED_DATA       Derived data path (default: /private/tmp/lookinside-example-deriveddata)"
 
 generate:
 	TUIST_LOOKINSIDE_SERVER_PATH="$(LOOKINSIDE_SERVER_PATH)" $(TUIST) generate --no-open
+
+# The watch apps cannot compile a local server from source (the watchOS SDK
+# marks UIKit unavailable), so they link the XCFramework the server's own
+# packaging script builds against an unlocked copy of the SDK.
+server-watch-framework:
+	@if [ -z "$(LOOKINSIDE_SERVER_PATH)" ]; then echo "Set LOOKINSIDE_SERVER_PATH to a LookInside-Server checkout." >&2; exit 1; fi
+	PLATFORMS=watchsimulator SKIP_ZIP=1 "$(LOOKINSIDE_SERVER_PATH)/Scripts/package-xcframework.sh"
 
 build: build-sim
 
@@ -183,7 +214,23 @@ build-tv-uikit:
 	    $(SIM_SIGN_FLAGS) \
 	    build
 
-build-all: build-sim build-uikit build-appkit build-tv build-tv-uikit
+build-watch:
+	mkdir -p "$(BUILD_HOME)" "$(XDG_CACHE_HOME)" "$(MODULE_CACHE)"
+	HOME="$(BUILD_HOME)" XDG_CACHE_HOME="$(XDG_CACHE_HOME)" CLANG_MODULE_CACHE_PATH="$(MODULE_CACHE)" SWIFTPM_MODULECACHE_OVERRIDE="$(MODULE_CACHE)" $(XCODEBUILD) \
+	    -scheme $(WATCH_SCHEME) \
+	    -destination "$(WATCH_SIM_DESTINATION)" \
+	    $(SIM_SIGN_FLAGS) \
+	    build
+
+build-watchkit:
+	mkdir -p "$(BUILD_HOME)" "$(XDG_CACHE_HOME)" "$(MODULE_CACHE)"
+	HOME="$(BUILD_HOME)" XDG_CACHE_HOME="$(XDG_CACHE_HOME)" CLANG_MODULE_CACHE_PATH="$(MODULE_CACHE)" SWIFTPM_MODULECACHE_OVERRIDE="$(MODULE_CACHE)" $(XCODEBUILD) \
+	    -scheme $(WATCHKIT_SCHEME) \
+	    -destination "$(WATCH_SIM_DESTINATION)" \
+	    $(SIM_SIGN_FLAGS) \
+	    build
+
+build-all: build-sim build-uikit build-appkit build-tv build-tv-uikit build-watch build-watchkit
 
 # =============================================================================
 # Run on simulator
@@ -262,6 +309,39 @@ launch-tv-uikit:
 	xcrun simctl launch "$(TV_SIMULATOR_UDID)" "$(TV_UIKIT_BUNDLE_ID)"
 
 run-tv-uikit: install-tv-uikit launch-tv-uikit
+
+# =============================================================================
+# Run on the Apple Watch simulator
+# =============================================================================
+
+boot-watch:
+	@if [ -z "$(WATCH_SIMULATOR_UDID)" ]; then echo "Simulator not found: $(WATCH_SIMULATOR_NAME). Create one in Xcode > Window > Devices and Simulators, or set WATCH_SIMULATOR_NAME." >&2; exit 1; fi
+	@xcrun simctl boot "$(WATCH_SIMULATOR_UDID)" 2>/dev/null || true
+	open -a Simulator
+
+install-watch: build-watch boot-watch
+	@APP_PATH=$$(find "$(DERIVED_DATA)/Build/Products" -name "$(WATCH_APP_NAME).app" -type d -path "*watchsimulator*" | head -1); \
+	if [ -z "$$APP_PATH" ]; then echo "App bundle not found under $(DERIVED_DATA)" >&2; exit 1; fi; \
+	echo "Installing $$APP_PATH"; \
+	xcrun simctl install "$(WATCH_SIMULATOR_UDID)" "$$APP_PATH"
+
+launch-watch:
+	@if [ -z "$(WATCH_SIMULATOR_UDID)" ]; then echo "Simulator not found: $(WATCH_SIMULATOR_NAME)" >&2; exit 1; fi
+	xcrun simctl launch "$(WATCH_SIMULATOR_UDID)" "$(WATCH_BUNDLE_ID)"
+
+run-watch: install-watch launch-watch
+
+install-watchkit: build-watchkit boot-watch
+	@APP_PATH=$$(find "$(DERIVED_DATA)/Build/Products" -name "$(WATCHKIT_APP_NAME).app" -type d -path "*watchsimulator*" | head -1); \
+	if [ -z "$$APP_PATH" ]; then echo "App bundle not found under $(DERIVED_DATA)" >&2; exit 1; fi; \
+	echo "Installing $$APP_PATH"; \
+	xcrun simctl install "$(WATCH_SIMULATOR_UDID)" "$$APP_PATH"
+
+launch-watchkit:
+	@if [ -z "$(WATCH_SIMULATOR_UDID)" ]; then echo "Simulator not found: $(WATCH_SIMULATOR_NAME)" >&2; exit 1; fi
+	xcrun simctl launch "$(WATCH_SIMULATOR_UDID)" "$(WATCHKIT_BUNDLE_ID)"
+
+run-watchkit: install-watchkit launch-watchkit
 
 # =============================================================================
 # Formatting
