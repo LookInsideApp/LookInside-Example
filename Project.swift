@@ -6,6 +6,8 @@ let uiKitTargetName = "LookInsideExampleUIKit"
 let appKitTargetName = "LookInsideExampleAppKit"
 let tvTargetName = "LookInsideExampleTV"
 let tvUIKitTargetName = "LookInsideExampleTVUIKit"
+let watchTargetName = "LookInsideExampleWatch"
+let watchKitTargetName = "LookInsideExampleWatchKit"
 let localServerPath = Environment.lookinsideServerPath.getString(default: "")
     .trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -20,6 +22,38 @@ let serverPackage: Package = usesLocalServer
         requirement: .upToNextMajor(from: "1.0.0")
     )
 let serverProduct = usesLocalServer ? "LookinServer" : "LookInsideServer"
+
+/// The watch apps cannot build a local Server from its sources: the watchOS
+/// SDK marks UIKit unavailable, and only the unlocked copy of it that the
+/// Server's packaging script makes compiles the Server. So against a local
+/// Server they link the XCFramework that script leaves in the Server's build
+/// folder (`make server-watch-framework`), and against the published SDK its
+/// binary, like every other app.
+let localWatchServerFrameworkRelativePath = "build/LookInsideServer.xcframework"
+let localWatchServerFrameworkFullPath = URL(
+    fileURLWithPath: localWatchServerFrameworkRelativePath,
+    relativeTo: URL(fileURLWithPath: localServerPath, isDirectory: true, relativeTo: URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true))
+).standardizedFileURL.path
+let localWatchServerFrameworkExists = FileManager.default.fileExists(atPath: localWatchServerFrameworkFullPath)
+let watchServerDependencies: [TargetDependency] = if !usesLocalServer {
+    [.package(product: "LookInsideServer")]
+} else if localWatchServerFrameworkExists {
+    [.xcframework(path: .path(localWatchServerFrameworkFullPath))]
+} else {
+    []
+}
+
+/// Without the framework a watch app would build and run but never be
+/// inspectable, so its build fails and says what to run.
+let watchServerScripts: [TargetScript] = usesLocalServer && !localWatchServerFrameworkExists
+    ? [
+        .pre(
+            script: "echo \"error: Run 'make server-watch-framework', then 'make generate': the watch apps link the local Server as \(localWatchServerFrameworkFullPath).\" >&2; exit 1",
+            name: "Require the local watchOS Server framework",
+            basedOnDependencyAnalysis: false
+        ),
+    ]
+    : []
 let configurations: [Configuration] = [
     .debug(name: "Debug", xcconfig: "Configuration/Development.xcconfig"),
     .release(name: "Release", xcconfig: "Configuration/Release.xcconfig"),
@@ -52,6 +86,9 @@ let xcconfigManagedSettings: Set<String> = [
 let project = Project(
     name: targetName,
     organizationName: "LookInside",
+    // The WatchKit app's storyboard is its only resource; WatchKit loads it
+    // by name, so no generated accessors under Derived/.
+    options: .options(disableBundleAccessors: true, disableSynthesizedResourceAccessors: true),
     packages: [
         serverPackage,
     ],
@@ -194,6 +231,60 @@ let project = Project(
                 defaultSettings: .recommended(excluding: xcconfigManagedSettings)
             )
         ),
+        .target(
+            name: watchTargetName,
+            destinations: [.appleWatch],
+            product: .app,
+            productName: watchTargetName,
+            bundleId: "$(LOOKINSIDE_EXAMPLE_WATCH_BUNDLE_ID)",
+            // The Server's watchOS minimum; it only listens from watchOS 26 on.
+            deploymentTargets: .watchOS("10.0"),
+            infoPlist: .file(path: "Sources/LookInsideExampleWatch/Info.plist"),
+            sources: [
+                "Sources/LookInsideExampleWatch/**/*.swift",
+                "Sources/DemoShared/**/*.swift",
+            ],
+            scripts: watchServerScripts,
+            dependencies: watchServerDependencies,
+            settings: .settings(
+                base: [
+                    "LD_RUNPATH_SEARCH_PATHS": [
+                        "$(inherited)",
+                        "@executable_path/Frameworks",
+                    ],
+                ],
+                configurations: configurations,
+                defaultSettings: .recommended(excluding: xcconfigManagedSettings)
+            )
+        ),
+        .target(
+            name: watchKitTargetName,
+            destinations: [.appleWatch],
+            product: .app,
+            productName: watchKitTargetName,
+            bundleId: "$(LOOKINSIDE_EXAMPLE_WATCHKIT_BUNDLE_ID)",
+            deploymentTargets: .watchOS("10.0"),
+            infoPlist: .file(path: "Sources/LookInsideExampleWatchKit/Info.plist"),
+            sources: [
+                "Sources/LookInsideExampleWatchKit/**/*.swift",
+                "Sources/DemoShared/**/*.swift",
+            ],
+            resources: [
+                "Sources/LookInsideExampleWatchKit/Interface.storyboard",
+            ],
+            scripts: watchServerScripts,
+            dependencies: watchServerDependencies,
+            settings: .settings(
+                base: [
+                    "LD_RUNPATH_SEARCH_PATHS": [
+                        "$(inherited)",
+                        "@executable_path/Frameworks",
+                    ],
+                ],
+                configurations: configurations,
+                defaultSettings: .recommended(excluding: xcconfigManagedSettings)
+            )
+        ),
     ],
     schemes: [
         .scheme(
@@ -229,6 +320,20 @@ let project = Project(
             shared: true,
             buildAction: .buildAction(targets: [.target(tvUIKitTargetName)]),
             runAction: .runAction(configuration: "Debug", executable: .target(tvUIKitTargetName)),
+            archiveAction: .archiveAction(configuration: "Release")
+        ),
+        .scheme(
+            name: watchTargetName,
+            shared: true,
+            buildAction: .buildAction(targets: [.target(watchTargetName)]),
+            runAction: .runAction(configuration: "Debug", executable: .target(watchTargetName)),
+            archiveAction: .archiveAction(configuration: "Release")
+        ),
+        .scheme(
+            name: watchKitTargetName,
+            shared: true,
+            buildAction: .buildAction(targets: [.target(watchKitTargetName)]),
+            runAction: .runAction(configuration: "Debug", executable: .target(watchKitTargetName)),
             archiveAction: .archiveAction(configuration: "Release")
         ),
     ],

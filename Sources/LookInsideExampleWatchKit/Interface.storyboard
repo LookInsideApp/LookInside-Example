@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder.WatchKit.Storyboard" version="3.0" toolsVersion="17150" targetRuntime="watchKit" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="mnC-tr-001">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="17122"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBWatchKitPlugin" version="17032"/>
+    </dependencies>
+    <scenes>
+        <!--Menu-->
+        <scene sceneID="mnS-cn-001">
+            <objects>
+                <controller identifier="Menu" id="mnC-tr-001" customClass="MenuInterfaceController" customModule="LookInsideExampleWatchKit" customModuleProvider="target">
+                    <items>
+                        <group width="1" alignment="left" spacing="6" id="mnG-hd-001">
+                            <items>
+                                <imageView width="32" height="32" alignment="left" verticalAlignment="center" contentMode="scaleAspectFit" id="mnI-lg-001"/>
+                                <group alignment="left" verticalAlignment="center" layout="vertical" spacing="0.0" id="mnG-tx-001">
+                                    <items>
+                                        <label alignment="left" text="LookInside" id="mnL-tt-001">
+                                            <fontDescription key="font" style="UICTFontTextStyleHeadline"/>
+                                        </label>
+                                        <label alignment="left" text="License not verified" id="mnL-st-001">
+                                            <fontDescription key="font" style="UICTFontTextStyleFootnote"/>
+                                        </label>
+                                    </items>
+                                </group>
+                            </items>
+                        </group>
+                        <label width="1" alignment="left" text="Choose this app in LookInside on your Mac." numberOfLines="0" id="mnL-cp-001">
+                            <fontDescription key="font" style="UICTFontTextStyleFootnote"/>
+                        </label>
+                        <separator alignment="left" id="mnS-pr-001"/>
+                        <table alignment="left" id="mnT-bl-001">
+                            <items>
+                                <tableRow identifier="MenuRow" id="mnR-ow-001" customClass="MenuRowController" customModule="LookInsideExampleWatchKit">
+                                    <group key="rootItem" width="1" alignment="left" spacing="8" id="mnG-rw-001">
+                                        <items>
+                                            <imageView width="24" height="24" alignment="left" verticalAlignment="center" contentMode="scaleAspectFit" id="mnI-rw-001"/>
+                                            <label alignment="left" verticalAlignment="center" text="Demo" id="mnL-rw-001"/>
+                                        </items>
+                                    </group>
+                                    <connections>
+                                        <outlet property="iconImage" destination="mnI-rw-001" id="mnO-ic-001"/>
+                                        <outlet property="titleLabel" destination="mnL-rw-001" id="mnO-tl-001"/>
+                                    </connections>
+                                </tableRow>
+                            </items>
+                        </table>
+                    </items>
+                    <connections>
+                        <outlet property="logoImage" destination="mnI-lg-001" id="mnO-lg-001"/>
+                        <outlet property="statusLabel" destination="mnL-st-001" id="mnO-st-001"/>
+                        <outlet property="menuTable" destination="mnT-bl-001" id="mnO-tb-001"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="220" y="345"/>
+        </scene>
+        <!--Now Playing-->
+        <scene sceneID="npS-cn-001">
+            <objects>
+                <controller identifier="NowPlaying" id="npC-tr-001" customClass="NowPlayingInterfaceController" customModule="LookInsideExampleWatchKit" customModuleProvider="target">
+                    <items>
+                        <imageView width="56" height="56" alignment="center" contentMode="scaleAspectFit" id="npI-ar-001"/>
+                        <label alignment="center" text="Title" id="npL-tt-001">
+                            <fontDescription key="font" style="UICTFontTextStyleHeadline"/>
+                        </label>
+                        <label alignment="center" text="Artist" id="npL-ar-001">
+                            <fontDescription key="font" style="UICTFontTextStyleFootnote"/>
+                        </label>
+                        <label alignment="center" text="0:00 / 0:00" id="npL-tm-001">
+                            <fontDescription key="font" style="UICTFontTextStyleCaption2"/>
+                        </label>
+                        <group width="1" alignment="center" spacing="4" id="npG-tp-001">
+                            <items>
+                                <button width="0.29999999999999999" alignment="left" title="Back" id="npB-bk-001">
+                                    <connections>
+                                        <action selector="restartTrack" destination="npC-tr-001" id="npA-bk-001"/>
+                                    </connections>
+                                </button>
+                                <button width="0.40000000000000002" alignment="center" title="Pause" id="npB-pl-001">
+                                    <connections>
+                                        <action selector="togglePlayback" destination="npC-tr-001" id="npA-pl-001"/>
+                                    </connections>
+                                </button>
+                                <button width="0.29999999999999999" alignment="right" title="Skip" id="npB-fw-001">
+                                    <connections>
+                                        <action selector="skipForward" destination="npC-tr-001" id="npA-fw-001"/>
+                                    </connections>
+                                </button>
+                            </items>
+                        </group>
+                    </items>
+                    <connections>
+                        <outlet property="artworkImage" destination="npI-ar-001" id="npO-ar-001"/>
+                        <outlet property="titleLabel" destination="npL-tt-001" id="npO-tt-001"/>
+                        <outlet property="artistLabel" destination="npL-ar-001" id="npO-at-001"/>
+                        <outlet property="timeLabel" destination="npL-tm-001" id="npO-tm-001"/>
+                        <outlet property="playButton" destination="npB-pl-001" id="npO-pl-001"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="468" y="345"/>
+        </scene>
+        <!--Playlists-->
+        <scene sceneID="plS-cn-001">
+            <objects>
+                <controller identifier="Playlists" id="plC-tr-001" customClass="PlaylistsInterfaceController" customModule="LookInsideExampleWatchKit" customModuleProvider="target">
+                    <items>
+                        <table alignment="left" id="plT-bl-001">
+                            <items>
+                                <tableRow identifier="PlaylistRow" id="plR-ow-001" customClass="PlaylistRowController" customModule="LookInsideExampleWatchKit">
+                                    <group key="rootItem" width="1" height="0.0" alignment="left" spacing="8" id="plG-rw-001">
+                                        <items>
+                                            <imageView width="30" height="30" alignment="left" verticalAlignment="center" contentMode="scaleAspectFit" id="plI-rw-001"/>
+                                            <group alignment="left" verticalAlignment="center" layout="vertical" spacing="0.0" id="plG-tx-001">
+                                                <items>
+                                                    <label alignment="left" text="Playlist" numberOfLines="2" id="plL-nm-001">
+                                                        <fontDescription key="font" style="UICTFontTextStyleHeadline"/>
+                                                    </label>
+                                                    <label alignment="left" text="Tracks" id="plL-dt-001">
+                                                        <fontDescription key="font" style="UICTFontTextStyleFootnote"/>
+                                                    </label>
+                                                </items>
+                                            </group>
+                                        </items>
+                                        <edgeInsets key="margins" left="6" right="6" top="6" bottom="6"/>
+                                    </group>
+                                    <connections>
+                                        <outlet property="iconImage" destination="plI-rw-001" id="plO-ic-001"/>
+                                        <outlet property="nameLabel" destination="plL-nm-001" id="plO-nm-001"/>
+                                        <outlet property="detailLabel" destination="plL-dt-001" id="plO-dt-001"/>
+                                    </connections>
+                                </tableRow>
+                            </items>
+                        </table>
+                    </items>
+                    <connections>
+                        <outlet property="playlistTable" destination="plT-bl-001" id="plO-tb-001"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="716" y="345"/>
+        </scene>
+        <!--Feed-->
+        <scene sceneID="fdS-cn-001">
+            <objects>
+                <controller identifier="Feed" id="fdC-tr-001" customClass="FeedInterfaceController" customModule="LookInsideExampleWatchKit" customModuleProvider="target">
+                    <items>
+                        <table alignment="left" id="fdT-bl-001">
+                            <items>
+                                <tableRow identifier="PostRow" id="fdR-ow-001" customClass="PostRowController" customModule="LookInsideExampleWatchKit">
+                                    <group key="rootItem" width="1" height="0.0" alignment="left" layout="vertical" spacing="4" id="fdG-rw-001">
+                                        <items>
+                                            <group width="1" alignment="left" spacing="6" id="fdG-hd-001">
+                                                <items>
+                                                    <group width="26" height="26" alignment="left" verticalAlignment="center" radius="13" id="fdG-av-001">
+                                                        <items>
+                                                            <label alignment="center" verticalAlignment="center" text="AB" id="fdL-in-001">
+                                                                <fontDescription key="font" style="UICTFontTextStyleCaption2"/>
+                                                            </label>
+                                                        </items>
+                                                    </group>
+                                                    <label alignment="left" verticalAlignment="center" text="Author" id="fdL-au-001">
+                                                        <fontDescription key="font" style="UICTFontTextStyleHeadline"/>
+                                                    </label>
+                                                </items>
+                                            </group>
+                                            <label width="1" alignment="left" text="Body" numberOfLines="3" id="fdL-bd-001">
+                                                <fontDescription key="font" style="UICTFontTextStyleFootnote"/>
+                                            </label>
+                                        </items>
+                                        <edgeInsets key="margins" left="6" right="6" top="6" bottom="6"/>
+                                    </group>
+                                    <connections>
+                                        <outlet property="avatarGroup" destination="fdG-av-001" id="fdO-av-001"/>
+                                        <outlet property="initialsLabel" destination="fdL-in-001" id="fdO-in-001"/>
+                                        <outlet property="authorLabel" destination="fdL-au-001" id="fdO-au-001"/>
+                                        <outlet property="bodyLabel" destination="fdL-bd-001" id="fdO-bd-001"/>
+                                    </connections>
+                                </tableRow>
+                            </items>
+                        </table>
+                    </items>
+                    <connections>
+                        <outlet property="postTable" destination="fdT-bl-001" id="fdO-tb-001"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="964" y="345"/>
+        </scene>
+        <!--Controls-->
+        <scene sceneID="ctS-cn-001">
+            <objects>
+                <controller identifier="Controls" id="ctC-tr-001" customClass="ControlsInterfaceController" customModule="LookInsideExampleWatchKit" customModuleProvider="target">
+                    <items>
+                        <switch width="1" alignment="left" title="Shuffle" id="ctW-sh-001">
+                            <connections>
+                                <action selector="shuffleChanged:" destination="ctC-tr-001" id="ctA-sh-001"/>
+                            </connections>
+                        </switch>
+                        <switch width="1" alignment="left" value="YES" title="Repeat" id="ctW-rp-001">
+                            <connections>
+                                <action selector="repeatChanged:" destination="ctC-tr-001" id="ctA-rp-001"/>
+                            </connections>
+                        </switch>
+                        <label alignment="left" text="Volume" id="ctL-vl-001"/>
+                        <slider width="1" alignment="left" value="6" maximum="10" steps="10" id="ctS-vl-001">
+                            <connections>
+                                <action selector="volumeChanged:" destination="ctC-tr-001" id="ctA-vl-001"/>
+                            </connections>
+                        </slider>
+                        <separator alignment="left" id="ctS-pr-001"/>
+                        <button width="1" alignment="left" title="Send" id="ctB-sd-001">
+                            <connections>
+                                <action selector="sendTapped" destination="ctC-tr-001" id="ctA-sd-001"/>
+                            </connections>
+                        </button>
+                        <label width="1" alignment="left" text="Every control here is a WatchKit interface object drawn by a private UIKit view." numberOfLines="0" id="ctL-cp-001">
+                            <fontDescription key="font" style="UICTFontTextStyleFootnote"/>
+                        </label>
+                    </items>
+                    <connections>
+                        <outlet property="volumeLabel" destination="ctL-vl-001" id="ctO-vl-001"/>
+                        <outlet property="sendButton" destination="ctB-sd-001" id="ctO-sd-001"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="1212" y="345"/>
+        </scene>
+    </scenes>
+</document>

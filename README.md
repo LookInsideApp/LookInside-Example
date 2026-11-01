@@ -1,12 +1,14 @@
 # LookInside-Example
 
-Ready-to-run demo apps for trying LookInside on iOS, tvOS, and macOS.
+Ready-to-run demo apps for trying LookInside on iOS, tvOS, watchOS, and macOS.
 
-Five apps live here. Each opens on a Welcome screen with the setup steps and the live license state, then shows a set of demos. Run one, open LookInside on your Mac, and inspect the live UI.
+Seven apps live here. Each opens on a Welcome screen with the setup steps and the live license state, then shows a set of demos. Run one, open LookInside on your Mac, and inspect the live UI.
 
 The iOS and macOS apps show the same three demos — Music, Feed, and Chat — built three different ways. Because the screens match, you can load the SwiftUI app and the native app side by side and compare exactly what each hierarchy looks like in the inspector.
 
 The two Apple TV apps do the same for tvOS: Music and Feed, rebuilt for the remote — rows of focusable cards that scroll sideways — once in SwiftUI and once in UIKit. Chat is left out; nobody types on a TV.
+
+The two Apple Watch apps show Now Playing, Playlists, Feed, and Controls on a watch-sized list, once in SwiftUI and once with WatchKit storyboards. Neither framework lets an app touch UIKit, yet on watchOS both are drawn by UIKit views — PepperUICore's and WatchKit's own — and LookInside shows that layer as well as the SwiftUI one.
 
 The native apps additionally ship a Controls screen: a gallery of the stock UIKit / AppKit controls — buttons, text inputs, sliders, steppers, progress indicators, pickers, and a card drawn by a bare `CALayer` sublayer — so there is a rich, varied hierarchy to point the inspector at. The tvOS version holds the controls tvOS has.
 
@@ -17,6 +19,8 @@ The native apps additionally ship a Controls screen: a gallery of the stock UIKi
 | `LookInsideExampleAppKit` | macOS | AppKit only — no `import SwiftUI` |
 | `LookInsideExampleTV` | tvOS | SwiftUI |
 | `LookInsideExampleTVUIKit` | tvOS | UIKit and TVUIKit only — no `import SwiftUI` |
+| `LookInsideExampleWatch` | watchOS | SwiftUI |
+| `LookInsideExampleWatchKit` | watchOS | WatchKit storyboards only — no `import SwiftUI` |
 
 The native apps are written the long way on purpose: hand-built view controllers, Auto Layout constraints, Core Animation layers, view-based table views, and a code-built menu bar on the Mac. That is the shape most real apps have, and the shape the inspector was built for. The tvOS UIKit app adds compositional collection views and TVUIKit's media item and monogram cells, the building blocks of most Apple TV apps.
 
@@ -50,9 +54,18 @@ make run-tv-uikit   # UIKit
 
 They use the `Apple TV 4K (4th generation)` simulator that Xcode creates, preferring a booted one; pick another with `TV_SIMULATOR_NAME="Apple TV 4K (4th generation) (at 1080p)" make run-tv`. The tvOS simulator runtime is a separate download in Xcode › Settings › Components.
 
+Apple Watch apps (Apple Watch Simulator, watchOS 26 or later):
+
+```bash
+make run-watch      # SwiftUI
+make run-watchkit   # WatchKit
+```
+
+They use the `Apple Watch Series 12 (46mm)` simulator, preferring a booted one; pick another with `WATCH_SIMULATOR_NAME`. Launched with `-demo NowPlaying` (or `Playlists`, `Feed`, `Controls`), for example `xcrun simctl launch booted app.lookinside.example.watch -demo Controls`, an app opens that demo straight away.
+
 You can also open `LookInsideExample.xcodeproj` in Xcode, pick a scheme, and press Run.
 
-LookInside finds a running app on its own: over TCP loopback in the iOS and Apple TV Simulators and on this Mac (ports 47164–47169), or over USB on a connected device (ports 47175–47179). The tvOS apps have been checked in the Apple TV Simulator only; an Apple TV has no USB port for LookInside to reach it through.
+LookInside finds a running app on its own: over TCP loopback in the iOS, Apple TV, and Apple Watch Simulators and on this Mac (ports 47164–47169), or over USB on a connected device (ports 47175–47179). The tvOS apps have been checked in the Apple TV Simulator only; an Apple TV has no USB port for LookInside to reach it through. The watchOS apps have been checked in the Apple Watch Simulator only; on a real Apple Watch the server stays idle, because watchOS does not let an app accept LookInside's connection.
 
 ## Build only
 
@@ -63,7 +76,9 @@ make build-uikit      # UIKit app
 make build-appkit     # AppKit app
 make build-tv         # SwiftUI app, Apple TV Simulator
 make build-tv-uikit   # UIKit app, Apple TV Simulator
-make build-all        # all five
+make build-watch      # SwiftUI app, Apple Watch Simulator
+make build-watchkit   # WatchKit app, Apple Watch Simulator
+make build-all        # all seven
 ```
 
 Run `make help` for the full target list.
@@ -77,7 +92,9 @@ Run `make help` for the full target list.
 | `Sources/LookInsideExampleAppKit/` | The pure-AppKit macOS app |
 | `Sources/LookInsideExampleTV/` | The SwiftUI tvOS app |
 | `Sources/LookInsideExampleTVUIKit/` | The pure-UIKit tvOS app |
-| `Sources/DemoShared/` | Demo fixtures shared by the native apps and the tvOS apps, plus the server runtime bridge |
+| `Sources/LookInsideExampleWatch/` | The SwiftUI watchOS app |
+| `Sources/LookInsideExampleWatchKit/` | The WatchKit storyboard watchOS app |
+| `Sources/DemoShared/` | Demo fixtures shared by the native, tvOS, and watchOS apps, plus the server runtime bridge |
 | `LookInsideExample.xcodeproj` | The Xcode project |
 | `Project.swift` | Tuist project setup |
 | `Configuration/` | Build settings |
